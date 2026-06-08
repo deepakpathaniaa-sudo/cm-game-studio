@@ -166,8 +166,14 @@ let selectedGrade = 4;
 async function redirectByRole(){
   const {data:{user}} = await sb.auth.getUser();
   if(!user) return;
-  const {data:p} = await sb.from('profiles').select('role').eq('id',user.id).single();
-  if(p) window.location.href = ROUTES[p.role] || '/student';
+  // Retry up to 5 times with 500ms gap — trigger may need a moment to write profile
+  for(let i=0; i<5; i++){
+    const {data:p} = await sb.from('profiles').select('role').eq('id',user.id).single();
+    if(p){ window.location.href = ROUTES[p.role] || '/student'; return; }
+    await new Promise(r=>setTimeout(r,500));
+  }
+  // Fallback if profile never appeared
+  window.location.href = '/student';
 }
 
 // ── TAB SWITCHER ──────────────────────────────────────────
@@ -254,7 +260,10 @@ async function doSignup(e){
     successMsg.textContent = `Welcome, ${name}! 🎉 Your account is ready. Taking you to your portal…`;
     btn.style.display = 'none';
     successBox.classList.add('show');
-    startRedirectBar(2500, redirectByRole);
+    // Use selectedRole directly — DB trigger may not have written profile yet
+    startRedirectBar(2500, () => {
+      window.location.href = ROUTES[selectedRole] || '/student';
+    });
     return;
   }
 
