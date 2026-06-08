@@ -5,540 +5,331 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Instructor Dashboard — Concept Mastery</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --font:'Nunito',sans-serif;--display:'Fredoka One',cursive;
-  --bg:#f0f4ff;--card:#fff;--border:#dde4f5;
-  --text:#1a1a2e;--muted:#6b7280;
-  --blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--orange:#D4620E;--red:#C0392B;
-  --purple:#6C3FA0;--radius:14px;
-}
+:root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--bg:#f0f4ff;--card:#fff;--border:#dde4f5;--text:#1a1a2e;--muted:#6b7280;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--orange:#D4620E;--red:#C0392B;--purple:#6C3FA0;--radius:14px}
 html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
-
 .topbar{background:var(--blue);padding:.7rem 1.4rem;display:flex;align-items:center;gap:.85rem;box-shadow:0 2px 16px rgba(26,94,171,.35);position:sticky;top:0;z-index:50}
 .topbar-logo{font-family:var(--display);color:#fff;font-size:1.1rem}
 .topbar-logo span{color:var(--gold)}
-.inst-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
-.topbar-right{margin-left:auto;font-size:.78rem;color:rgba(255,255,255,.75);font-weight:700}
-
-.layout{display:grid;grid-template-columns:260px 1fr;height:calc(100vh - 52px);overflow:hidden}
-
-/* SIDEBAR */
+.inst-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:.7rem}
+.topbar-name{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:700}
+.logout-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.68rem;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:var(--font)}
+.layout{display:grid;grid-template-columns:240px 1fr;height:calc(100vh - 52px);overflow:hidden}
+/* sidebar */
 .sidebar{background:var(--card);border-right:1px solid var(--border);overflow-y:auto;padding:.6rem 0}
 .sb-section{padding:.5rem .85rem .25rem;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
 .day-item{display:flex;align-items:center;gap:.65rem;padding:.55rem .9rem;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
 .day-item:hover{background:var(--bg)}
 .day-item.active{background:#EAF1FB;border-left-color:var(--blue)}
-.di-icon{font-size:1.1rem;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem}
-.di-info{flex:1;min-width:0}
-.di-title{font-size:.76rem;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.di-genre{font-size:.62rem;color:var(--muted)}
-
-.sidebar-tips{padding:.75rem .9rem;margin:.5rem .7rem 0;background:var(--bg);border-radius:10px;border:1px solid var(--border)}
-.sidebar-tips h4{font-size:.7rem;font-weight:800;color:var(--text);margin-bottom:.35rem}
-.sidebar-tips li{font-size:.67rem;color:var(--muted);line-height:1.55;margin-left:.9rem;margin-bottom:.18rem}
-
-/* MAIN */
-.main{overflow-y:auto;padding:1.2rem 1.4rem}
-
-/* Day hero */
-.day-hero{border-radius:var(--radius);padding:1.3rem 1.5rem;color:#fff;margin-bottom:1.1rem;position:relative;overflow:hidden}
+.di-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.85rem}
+.di-title{font-size:.75rem;font-weight:800;color:var(--text)}
+/* main */
+.main{overflow-y:auto;padding:1.1rem 1.3rem}
+/* hero */
+.day-hero{border-radius:var(--radius);padding:1.2rem 1.4rem;color:#fff;margin-bottom:1rem;position:relative;overflow:hidden}
 .day-hero::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.12)}
-.dh-badge{position:relative;display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);border-radius:20px;font-size:.62rem;font-weight:800;padding:3px 11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.45rem}
-.dh-title{position:relative;font-family:var(--display);font-size:1.9rem;line-height:1.1;margin-bottom:.2rem}
-.dh-sub{position:relative;font-size:.83rem;opacity:.8;margin-bottom:.8rem}
-.dh-objective{position:relative;background:rgba(255,255,255,.14);border-radius:10px;padding:.7rem .9rem;font-size:.8rem;line-height:1.55}
-.dh-objective strong{display:block;font-size:.63rem;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-bottom:.2rem}
-
-/* Prompt library sections */
-.section-title{font-size:.8rem;font-weight:800;color:var(--text);margin:.9rem 0 .5rem;display:flex;align-items:center;gap:.5rem}
-.section-title .stag{font-size:.62rem;font-weight:700;padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.dh-badge{position:relative;display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);border-radius:20px;font-size:.62rem;font-weight:800;padding:3px 11px;text-transform:uppercase;margin-bottom:.4rem}
+.dh-title{position:relative;font-family:var(--display);font-size:1.8rem;line-height:1.1;margin-bottom:.15rem}
+.dh-sub{position:relative;font-size:.8rem;opacity:.8;margin-bottom:.7rem}
+.dh-obj{position:relative;background:rgba(255,255,255,.14);border-radius:10px;padding:.65rem .85rem;font-size:.78rem;line-height:1.55}
+.dh-obj strong{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-bottom:.2rem}
+/* section */
+.sec-title{font-size:.78rem;font-weight:800;color:var(--text);margin:.85rem 0 .5rem;display:flex;align-items:center;gap:.5rem}
+.stag{font-size:.6rem;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase}
 .stag-blue{background:var(--blue);color:#fff}
 .stag-green{background:var(--green);color:#fff}
 .stag-red{background:var(--red);color:#fff}
 .stag-gold{background:var(--gold);color:#1a1a2e}
-
-.prompt-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem}
-@media(max-width:900px){.prompt-grid{grid-template-columns:1fr}}
-
-.instr-prompt{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:.85rem 1rem;cursor:pointer;transition:all .2s;position:relative}
-.instr-prompt:hover{border-color:var(--blue);box-shadow:0 3px 14px rgba(26,94,171,.1);transform:translateY(-1px)}
-.ip-label{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.35rem;display:flex;align-items:center;gap:.4rem}
-.ip-text{font-size:.8rem;line-height:1.6;color:var(--text)}
-.ip-text .fill{color:var(--blue);font-weight:800;font-style:italic}
-.ip-actions{display:flex;gap:.4rem;margin-top:.6rem}
-.ip-copy{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.35rem .8rem;font-size:.7rem;font-weight:800;cursor:pointer;font-family:var(--font);transition:background .2s}
-.ip-copy:hover{background:#1450a0}
-.ip-broadcast{background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;padding:.35rem .8rem;font-size:.7rem;font-weight:800;cursor:pointer;font-family:var(--font);transition:background .2s}
-.ip-broadcast:hover{background:#d49010}
-.copied-flash{position:absolute;top:8px;right:10px;background:var(--green);color:#fff;font-size:.58rem;font-weight:800;padding:2px 7px;border-radius:20px;opacity:0;transition:opacity .3s}
-.instr-prompt.flashed .copied-flash{opacity:1}
-
-/* Broadcast panel */
-.broadcast-panel{background:linear-gradient(135deg,#1a1a2e,#2d3561);border-radius:var(--radius);padding:1.1rem 1.2rem;margin-bottom:1.1rem;color:#fff}
-.bp-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.6);margin-bottom:.4rem}
-.bp-content{font-size:.88rem;line-height:1.6;margin-bottom:.8rem;min-height:2.5rem;font-style:italic;color:rgba(255,255,255,.9)}
-.bp-content.empty{color:rgba(255,255,255,.35);font-style:normal;font-size:.78rem}
+/* day unlock panel */
+.unlock-panel{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1rem}
+.unlock-panel h3{font-size:.8rem;font-weight:800;margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+.unlock-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem}
+@media(max-width:900px){.unlock-grid{grid-template-columns:repeat(5,1fr)}}
+.unlock-day{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:.5rem .4rem;text-align:center}
+.unlock-day-label{font-size:.68rem;font-weight:800;color:var(--text);margin-bottom:.35rem}
+.toggle{position:relative;display:inline-block;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:22px;transition:.3s}
+.slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+input:checked+.slider{background:var(--green)}
+input:checked+.slider:before{transform:translateX(18px)}
+/* progress grid */
+.progress-panel{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden}
+.progress-panel-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);font-size:.78rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+.progress-table-wrap{overflow-x:auto}
+.progress-table{width:100%;border-collapse:collapse;font-size:.72rem}
+.progress-table th{padding:.5rem .4rem;text-align:center;font-size:.62rem;font-weight:800;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+.progress-table th.name-col{text-align:left;padding-left:.8rem;min-width:110px}
+.progress-table td{padding:.4rem .3rem;text-align:center;border-bottom:1px solid #f0f4ff}
+.progress-table td.name-cell{text-align:left;padding-left:.8rem;font-weight:800;font-size:.75rem}
+.progress-table tr:hover td{background:#f8f9ff}
+.cell-done{font-size:.9rem}
+.cell-active{font-size:.8rem;opacity:.7}
+.cell-empty{font-size:.75rem;color:var(--border)}
+.student-row-expand{cursor:pointer}
+.student-detail{display:none;background:#fafbff}
+.student-detail td{padding:.6rem .8rem!important;text-align:left!important}
+.detail-inner{font-size:.72rem;color:var(--muted);line-height:1.6}
+/* uploads panel */
+.uploads-panel{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden}
+.uploads-header{padding:.75rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;font-size:.78rem;font-weight:800}
+.notif-badge{background:var(--red);color:#fff;font-size:.6rem;font-weight:800;padding:1px 7px;border-radius:20px}
+.upload-list{display:flex;flex-direction:column}
+.upload-item{padding:.65rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.7rem;transition:background .15s}
+.upload-item:hover{background:var(--bg)}
+.upload-item:last-child{border-bottom:none}
+.upload-item.new{border-left:3px solid var(--blue)}
+.ui-emoji{font-size:1.1rem}
+.ui-info{flex:1;min-width:0}
+.ui-name{font-size:.78rem;font-weight:800;color:var(--text)}
+.ui-meta{font-size:.65rem;color:var(--muted)}
+.ui-actions{display:flex;gap:.4rem}
+.ui-btn{padding:.35rem .75rem;border-radius:8px;border:none;font-family:var(--font);font-size:.68rem;font-weight:800;cursor:pointer}
+.ui-preview{background:var(--blue);color:#fff}
+.ui-download{background:var(--bg);border:1px solid var(--border)!important;color:var(--text);border:none}
+.empty-uploads{padding:1.2rem;text-align:center;font-size:.8rem;color:var(--muted)}
+/* preview modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);width:100%;max-width:900px;height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-top{padding:.7rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+.modal-title{font-size:.82rem;font-weight:800;flex:1}
+.modal-close{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.35rem .75rem;font-size:.72rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.modal-dl{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.35rem .75rem;font-size:.72rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.modal-frame{flex:1;border:none;width:100%}
+/* broadcast */
+.broadcast-panel{background:linear-gradient(135deg,#1a1a2e,#2d3561);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1rem;color:#fff}
+.bp-title{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.6);margin-bottom:.35rem}
+.bp-content{font-size:.85rem;line-height:1.6;margin-bottom:.7rem;min-height:2.2rem;font-style:italic;color:rgba(255,255,255,.9)}
+.bp-content.empty{color:rgba(255,255,255,.35);font-style:normal;font-size:.76rem}
 .bp-row{display:flex;gap:.5rem;flex-wrap:wrap}
-.bp-copy{background:var(--gold);color:#1a1a2e;border:none;border-radius:10px;padding:.55rem 1.2rem;font-size:.78rem;font-weight:800;cursor:pointer;font-family:var(--font)}
-.bp-clear{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:.55rem 1.2rem;font-size:.78rem;font-weight:800;cursor:pointer;font-family:var(--font)}
-
-/* Timing guide */
-.timing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.5rem;margin-bottom:.5rem}
-.time-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.65rem .8rem}
-.tc-time{font-size:.68rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.2rem}
-.tc-label{font-size:.78rem;font-weight:800;color:var(--text);margin-bottom:.15rem}
-.tc-desc{font-size:.68rem;color:var(--muted);line-height:1.45}
-
-/* Voice tips */
-.voice-tips{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1rem}
-.vt-title{font-size:.75rem;font-weight:800;color:var(--text);margin-bottom:.6rem;display:flex;align-items:center;gap:.4rem}
+.bp-copy{background:var(--gold);color:#1a1a2e;border:none;border-radius:10px;padding:.5rem 1.1rem;font-size:.76rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.bp-clear{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:.5rem 1.1rem;font-size:.76rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+/* timing */
+.timing-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:.5rem;margin-bottom:.5rem}
+.time-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.6rem .75rem}
+.tc-time{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.2rem}
+.tc-label{font-size:.76rem;font-weight:800;color:var(--text);margin-bottom:.12rem}
+.tc-desc{font-size:.66rem;color:var(--muted);line-height:1.45}
+/* voice tips */
+.voice-tips{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:.9rem 1rem;margin-bottom:.9rem}
+.vt-title{font-size:.74rem;font-weight:800;margin-bottom:.5rem}
 .tip-list{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
 @media(max-width:800px){.tip-list{grid-template-columns:1fr}}
-.tip-item{background:var(--bg);border-radius:8px;padding:.55rem .7rem;font-size:.72rem;line-height:1.5;color:var(--text)}
-.tip-item strong{color:var(--blue);display:block;font-size:.65rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.1rem}
-
-/* Toast */
-.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#0f2d5a;color:#fff;border-radius:20px;padding:.7rem 1.3rem;font-size:.82rem;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.4,.64,1);white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.3);pointer-events:none}
+.tip-item{background:var(--bg);border-radius:8px;padding:.5rem .65rem;font-size:.7rem;line-height:1.5}
+.tip-item strong{color:var(--blue);display:block;font-size:.63rem;text-transform:uppercase;letter-spacing:.4px;margin-bottom:.1rem}
+/* prompts */
+.prompt-grid{display:grid;grid-template-columns:1fr 1fr;gap:.55rem;margin-bottom:.5rem}
+@media(max-width:900px){.prompt-grid{grid-template-columns:1fr}}
+.instr-prompt{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:.8rem .95rem;cursor:pointer;transition:all .2s;position:relative}
+.instr-prompt:hover{border-color:var(--blue);box-shadow:0 3px 14px rgba(26,94,171,.1);transform:translateY(-1px)}
+.ip-label{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem}
+.ip-text{font-size:.78rem;line-height:1.6}
+.ip-text .fill{color:var(--blue);font-weight:800;font-style:italic}
+.ip-actions{display:flex;gap:.4rem;margin-top:.55rem}
+.ip-copy{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.32rem .75rem;font-size:.68rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.ip-broadcast{background:var(--gold);color:#1a1a2e;border:none;border-radius:8px;padding:.32rem .75rem;font-size:.68rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.copied-flash{position:absolute;top:8px;right:8px;background:var(--green);color:#fff;font-size:.56rem;font-weight:800;padding:2px 6px;border-radius:20px;opacity:0;transition:opacity .3s}
+.instr-prompt.flashed .copied-flash{opacity:1}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#0f2d5a;color:#fff;border-radius:20px;padding:.7rem 1.3rem;font-size:.82rem;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.4,.64,1);pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="topbar-logo">🎮 Game <span>Studio</span></div>
   <span class="inst-badge">👩‍🏫 Instructor</span>
-  <div class="topbar-right">Concept Mastery — Grade 4 &amp; 5</div>
+  <div class="topbar-right">
+    <span class="topbar-name" id="tb-name"></span>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+<div class="layout">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="main" id="main-panel">
+    <div style="padding:2rem;text-align:center;color:var(--muted);font-size:.85rem">Loading dashboard…</div>
+  </div>
 </div>
 
-<div class="layout">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sb-section">10-Day Program</div>
-    <div id="day-nav"></div>
-    <div class="sidebar-tips" style="margin-top:.8rem">
-      <h4>🎯 Daily Flow</h4>
-      <ul>
-        <li>Show today's genre card on projector</li>
-        <li>Demo a starter prompt live</li>
-        <li>Students speak prompt to Claude</li>
-        <li>Paste HTML into browser to test</li>
-        <li>Use upgrade prompts to improve</li>
-        <li>Share favourite games at end</li>
-      </ul>
+<!-- Preview Modal -->
+<div class="modal-bg" id="modal-bg" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-title" id="modal-title">Game Preview</span>
+      <a id="modal-dl-link" target="_blank"><button class="modal-dl" id="modal-dl">⬇ Download</button></a>
+      <button class="modal-close" onclick="closeModalDirect()">✕ Close</button>
     </div>
+    <iframe class="modal-frame" id="modal-frame" sandbox="allow-scripts allow-same-origin"></iframe>
   </div>
-
-  <!-- MAIN -->
-  <div class="main" id="main-panel"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
+const SURL='https://xoxjcpbruryjcqonzwag.supabase.co';
+const SKEY='sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
+const sb=window.supabase.createClient(SURL,SKEY);
+
 const DAYS=[
-  {day:1,genre:'Quiz Game',emoji:'🧠',colour:'#6C3FA0',
-   objective:"Students create a quiz game about any topic they love using one starter prompt. By end of class each student has a working quiz they can share with friends.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Ask: what would you quiz your friends about? Collect ideas on board.'},
-     {time:'10–20 min',label:'Demo Live',desc:'You run the starter prompt on projector. Show the result. Show what [YOUR TOPIC] means.'},
-     {time:'20–50 min',label:'Students Build',desc:'Each student picks their topic and uses a starter prompt. Circulate and help.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast an upgrade prompt. Students add one feature.'},
-     {time:'70–85 min',label:'Share Out',desc:'3–4 students demo their quiz to the class.'},
-   ],
-   voiceTips:[
-     {label:'Replace the fill',tip:'Remind kids to say their actual topic instead of [YOUR TOPIC]. Demo this first.'},
-     {label:'Keep it specific',tip:'"quiz about my dog Bruno" works better than "quiz about dogs".'},
-     {label:'If Claude asks clarifying questions',tip:'Just answer naturally — Claude will use those answers to improve the game.'},
-     {label:'If the output is just text',tip:'Remind students to say "please give me the complete HTML file I can open in a browser".'},
-   ],
-   starters:[
-     {e:'🎤',label:'Classic Starter',t:'Make me a fun quiz game about [YOUR TOPIC] with 5 questions. Make it colourful and exciting. When I get an answer right, show a big celebration. Show the correct answer when I get it wrong.'},
-     {e:'🌈',label:'Simple Starter',t:'Create a quiz game about [YOUR TOPIC] for Grade 4 students. Add a score counter, bright colours, and make each question appear one at a time.'},
-     {e:'🏆',label:'Game Show Starter',t:'Build me a quiz about [YOUR TOPIC]. Make it look like a game show with bright lights and exciting colours. Show my total score at the end with a fun message.'},
-   ],
-   upgrades:[
-     {e:'⏱️',label:'Add Timer',t:'Add a timer that counts down 15 seconds for each question. If time runs out, show the answer and move to the next question automatically.'},
-     {e:'🎵',label:'Add Sound',t:'Add sound effects — a happy celebration sound when I get it right and a buzzer sound when I get it wrong. Make the correct answer flash green.'},
-     {e:'🏅',label:'Better Ending',t:'Add a final score screen at the end that shows a different message depending on how well I did. Like "Quiz Champion!" for a perfect score.'},
-     {e:'🔀',label:'Shuffle Questions',t:'Make the questions appear in a different random order every time I play so it feels new each time.'},
-     {e:'4️⃣',label:'Multiple Choice',t:'Add 4 answer buttons for each question. Make wrong answer buttons shake or wiggle when I click them.'},
-   ],
-   fixes:[
-     {e:'🖱️',label:'Buttons Broken',t:'The answer buttons are not working when I click them. Please fix the clicking so I can select my answer.'},
-     {e:'🔢',label:'Score Not Working',t:'The score is not going up when I get answers right. Please fix the score counter.'},
-     {e:'➡️',label:'Not Advancing',t:'The quiz is not moving to the next question after I answer. Please fix it so it goes to the next question automatically.'},
-     {e:'🔡',label:'Text Too Small',t:'All the text is too small to read easily. Please make all the words and buttons bigger.'},
-     {e:'🎨',label:'Hard to See',t:'The colours are hard to see. Please make the background and text colours easier to read.'},
-   ]},
-
-  {day:2,genre:'Maze Game',emoji:'🌀',colour:'#1A5EAB',
-   objective:"Students create a maze game with arrow key controls. Focus on choosing a fun theme and celebrating when they reach the exit.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Ask: what is the most confusing place you have ever been? What if it was a game?'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt on projector. Show how arrow keys work. Let one student try.'},
-     {time:'20–50 min',label:'Students Build',desc:'Students pick a character and theme. Circulate — help with theme choices.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast timer upgrade. Students try to add it.'},
-     {time:'70–85 min',label:'Share Out',desc:'Race challenge — who can solve each other\'s mazes fastest?'},
-   ],
-   voiceTips:[
-     {label:'Theme ideas to suggest',tip:'Jungle, haunted house, underwater, school at night, space station, candy land.'},
-     {label:'If maze is too simple',tip:'Suggest the bigger maze upgrade prompt to add more paths and dead ends.'},
-     {label:'Character names help',tip:'"a tiny mouse named Max" gives Claude more to work with than just "a mouse".'},
-     {label:'Arrow key issue common fix',tip:'If controls don\'t work, use the Fix It prompt about arrow keys — this is the most common Day 2 issue.'},
-   ],
-   starters:[
-     {e:'🎮',label:'Classic Starter',t:'Make me a maze game where I control a [CHARACTER] using arrow keys. The maze should look like a [THEME]. I need to reach the exit to win. Make it colourful and show a celebration when I finish.'},
-     {e:'⭐',label:'Simple Starter',t:'Create a maze game for kids. I use arrow keys to move. There are walls I cannot walk through. When I reach the star at the end I win and see a celebration.'},
-     {e:'🗺️',label:'Adventure Starter',t:'Build a maze game where I am a [CHARACTER] trying to reach [GOAL]. Add arrow key controls and show how many steps I have taken at the top.'},
-   ],
-   upgrades:[
-     {e:'⏱️',label:'Add Timer',t:'Add a timer that counts how many seconds it takes me to finish the maze. Show my best time so I can try to beat it each game.'},
-     {e:'🪙',label:'Add Coins',t:'Add collectible coins hidden in different parts of the maze that I can pick up for bonus points.'},
-     {e:'📈',label:'Add Levels',t:'Make the maze bigger and add 3 levels. Each level should have a more complex maze than the last.'},
-     {e:'👾',label:'Add Enemy',t:'Add an enemy character that wanders through the maze. If it touches me I lose a life. Give me 3 lives.'},
-     {e:'🗺️',label:'Add Mini Map',t:'Add a small map in the corner of the screen that shows my position in the maze with a little dot.'},
-   ],
-   fixes:[
-     {e:'🧱',label:'Walking Through Walls',t:'My character is walking through the walls instead of being stopped by them. Please fix the wall collision.'},
-     {e:'⌨️',label:'Keys Not Working',t:'The arrow keys are not moving my character at all. Please fix the keyboard controls so arrow keys work.'},
-     {e:'🐢',label:'Too Fast',t:'My character moves too fast and is hard to control accurately. Please make the movement speed slower.'},
-     {e:'🚪',label:'No Exit',t:'The exit is not showing up on screen. Please make the exit clearly visible with a bright distinctive colour.'},
-     {e:'👁️',label:'Hard to See',t:'The maze is too hard to see. Please make the walls and open paths clearer with better contrasting colours.'},
-   ]},
-
-  {day:3,genre:'Story Adventure',emoji:'📖',colour:'#D4620E',
-   objective:"Students create branching choice stories. The key learning: every choice has a consequence. Encourage wild, creative storylines.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Play a quick verbal choose-your-own: "You find a door. Knock or open it?" Let class vote on 3 decisions together.'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-voted theme. Show how choices branch.'},
-     {time:'20–55 min',label:'Students Build',desc:'Students spend time on their setting and character. This day needs more creative thinking time.'},
-     {time:'55–70 min',label:'Upgrade Round',desc:'Broadcast the emoji art upgrade — most engaging visual addition.'},
-     {time:'70–85 min',label:'Share Out',desc:'Two students share their story — class plays it live.'},
-   ],
-   voiceTips:[
-     {label:'Setting up the world',tip:'Encourage students to describe the world in detail: "a dark forest with glowing mushrooms and a broken bridge".'},
-     {label:'Multiple endings',tip:'Prompt students: your story needs at least one good ending and one surprise ending. Ask Claude for both.'},
-     {label:'If story is too short',tip:'Use: "Make the story longer — add 3 more choice moments before the ending."'},
-     {label:'Character names matter',tip:'"A girl called Maya who is scared of nothing" gives Claude a much richer character to work with.'},
-   ],
-   starters:[
-     {e:'🗺️',label:'Classic Starter',t:'Make me a choose-your-own-adventure story where I am a [CHARACTER]. The story starts at [PLACE]. At each step I get 2 choices. Make it exciting with lots of surprises and use big colourful text.'},
-     {e:'✨',label:'Simple Starter',t:'Create a story game where I play as a [CHARACTER] who needs to [GOAL]. Give me choices at each step that lead to different endings. Make it fun and exciting for Grade 4 kids.'},
-     {e:'🎭',label:'Endings Starter',t:'Build an adventure story game set in [PLACE]. I make choices that change the story. Give it at least 3 different endings — one good, one bad, and one totally surprising.'},
-   ],
-   upgrades:[
-     {e:'🖼️',label:'Add Art',t:'Add emoji pictures at the top of each scene to show what the place looks like. Use lots of emoji to create a visual scene.'},
-     {e:'🎒',label:'Add Inventory',t:'Add an inventory system where I can collect items during the story and use them to unlock special choices that only appear if I have the right item.'},
-     {e:'❤️',label:'Add Health',t:'Add a health meter that starts at 100. Some choices take away health points. If health reaches zero I get a game over and have to restart from the beginning.'},
-     {e:'🎵',label:'Add Sound',t:'Add sound effects for different moments in the story — a creepy sound for danger, a happy sound for success, a funny sound for silly moments.'},
-     {e:'📜',label:'Add Story Recap',t:'Add a recap screen at the very end that lists all the choices I made during the story so I can see my path to the ending.'},
-   ],
-   fixes:[
-     {e:'🖱️',label:'Buttons Not Working',t:'The choice buttons are not doing anything when I click them. Please fix them so clicking a choice moves the story forward.'},
-     {e:'🔀',label:'Wrong Scene',t:'After I make a choice the story jumps to the wrong scene. Please fix the story flow so each choice leads to the correct next part.'},
-     {e:'📄',label:'Text Too Long',t:'The text on each page is too long and hard to read. Please break it into shorter paragraphs with more space between them.'},
-     {e:'🏁',label:'No Ending',t:'The story does not seem to end properly. Please fix it so the game knows when the story is finished and shows a final message.'},
-     {e:'🔙',label:'Back Button Wrong',t:'The back button is taking me to the wrong place in the story. Please fix the navigation between scenes.'},
-   ]},
-
-  {day:4,genre:'Catch Game',emoji:'🎯',colour:'#2D8A3E',
-   objective:"Students build an action game with real-time movement. Focus on choosing creative good and bad items — the more personalised the better.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Ask: if it rained any food from the sky, what would you catch and what would you run from?'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt. Show how changing the items completely changes the feel of the game.'},
-     {time:'20–50 min',label:'Students Build',desc:'Students spend time choosing their theme carefully — it makes the game theirs.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast the golden item upgrade — instant improvement to any catch game.'},
-     {time:'70–85 min',label:'Share Out',desc:'High score challenge — who gets the highest score in 2 minutes?'},
-   ],
-   voiceTips:[
-     {label:'Creative item ideas',tip:'Pizza and broccoli, gold coins and spiders, kittens and dogs (catching dogs loses lives), sunshine and rain.'},
-     {label:'Character choices',tip:'A basket, a chef, a superhero, a robot with a magnet — character changes the whole feel.'},
-     {label:'If game has no bad items',tip:'Use: "Add [BAD THINGS] that also fall — if I catch them I lose a life."'},
-     {label:'Difficulty balance',tip:'If students find it too easy: "Make things fall 50% faster and increase speed more as score goes up."'},
-   ],
-   starters:[
-     {e:'🧺',label:'Classic Starter',t:'Make a catch game where [GOOD THINGS] fall from the sky and I move a basket left and right to catch them. [BAD THINGS] also fall and I must avoid them. Add a score counter and 3 lives.'},
-     {e:'🏃',label:'Character Starter',t:'Create a game where I control a [CHARACTER] at the bottom of the screen using arrow keys. Good things fall and give me points, bad things fall and take away lives. Make it colourful.'},
-     {e:'📈',label:'Speed Starter',t:'Build a falling objects game. Good things are [GOOD]. Bad things are [BAD]. Things fall faster as my score gets higher. I move left and right to catch or dodge them.'},
-   ],
-   upgrades:[
-     {e:'💨',label:'Speed Up',t:'Make everything fall faster as my score gets higher. Add a level counter that increases every 50 points.'},
-     {e:'⭐',label:'Golden Item',t:'Add a special golden or sparkly item that appears randomly — catching it gives 5 times the normal points and plays a special sound.'},
-     {e:'🛡️',label:'Shield Power',t:'Add a shield power-up that falls occasionally. Catching it protects me from the very next bad item that hits me.'},
-     {e:'💥',label:'Catch Animation',t:'Make caught items do a little explosion or pop animation before disappearing. Show a little score number flying up where I caught it.'},
-     {e:'🏆',label:'High Score',t:'Add a high score display that saves my best score and shows it every time I play so I can try to beat my own record.'},
-   ],
-   fixes:[
-     {e:'⬅️',label:'Controls Broken',t:'My basket or character is not moving when I press the arrow keys. Please fix the controls.'},
-     {e:'📦',label:'Going Off Screen',t:'The falling objects are going off the sides of the screen and disappearing. Please keep all objects inside the game area.'},
-     {e:'💔',label:'Lives Not Working',t:'I am catching bad items but my lives are not going down. Please fix the life counter so it decreases when I catch bad items.'},
-     {e:'🎮',label:'No Game Over',t:'When I run out of lives the game just continues. Please fix it so a game over screen appears when I have no lives left.'},
-     {e:'😴',label:'Too Boring',t:'Everything falls at exactly the same speed and it gets boring quickly. Please make items fall at different random speeds.'},
-   ]},
-
-  {day:5,genre:'Memory Game',emoji:'🃏',colour:'#C0392B',
-   objective:"Students create a memory matching game. The theme is the most important creative decision — the more personal it is, the more engaged students are.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Play a quick verbal memory round — show 10 items for 10 seconds, cover them, how many can students name?'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-suggested theme. Show the shuffle happening.'},
-     {time:'20–50 min',label:'Students Build',desc:'Students should spend 10 minutes choosing their theme before they start prompting.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast the timer upgrade — creates instant challenge.'},
-     {time:'70–85 min',label:'Share Out',desc:'Memory championship — who can complete another student\'s game fastest?'},
-   ],
-   voiceTips:[
-     {label:'Theme ideas',tip:'Their favourite animals, things in their bedroom, school subjects, planets, famous people, their friends\' names.'},
-     {label:'Personalise it',tip:'"Memory game with pictures of things I love — pizza, my dog, football, and my best friend" is better than just "food theme".'},
-     {label:'Card count',tip:'12 cards (6 pairs) is ideal for Grade 4/5. 16 cards is harder. Suggest starting with 12.'},
-     {label:'Common issue',tip:'If cards flip back when matched — use the Fix It prompt about matched cards staying up.'},
-   ],
-   starters:[
-     {e:'🎴',label:'Classic Starter',t:'Make a memory matching card game with [THEME] pictures on the cards. Show 12 cards face down. I click 2 cards at a time to flip them. Matching pairs stay face up. Count my total attempts.'},
-     {e:'🧠',label:'Score Starter',t:'Create a memory game with [NUMBER] pairs of matching [THEME] cards. Shuffle them randomly every new game. Show my score and a celebration when I match all pairs.'},
-     {e:'✨',label:'Animation Starter',t:'Build a flip-card memory game with [THEME] on each card. I try to find all matching pairs in as few clicks as possible. Make the cards flip with a smooth satisfying animation.'},
-   ],
-   upgrades:[
-     {e:'⏱️',label:'Add Timer',t:'Add a countdown timer. I have 60 seconds to match all the pairs before time runs out. Show an alert if time runs out.'},
-     {e:'📊',label:'Add Levels',t:'Add difficulty levels I can choose at the start — Easy has 8 cards, Medium has 16, Hard has 24 cards.'},
-     {e:'💃',label:'Match Animation',t:'When I find a matching pair, make both cards do a little bounce or sparkle animation before they stay face up.'},
-     {e:'⭐',label:'Star Rating',t:'Add a star rating at the end — 3 stars for finishing in very few clicks, 2 stars for average, 1 star for a slow finish.'},
-     {e:'❌',label:'Wrong Limit',t:'Add a rule that makes the game end if I make 10 wrong matches total. Show how many wrong guesses I have left.'},
-   ],
-   fixes:[
-     {e:'🖱️',label:'Multi-Click Bug',t:'I can click more than 2 cards at the same time. Please fix it so only 2 cards can be flipped at once.'},
-     {e:'🔄',label:'Matches Flip Back',t:'Matched cards are flipping back face down. Please fix it so matched pairs stay permanently face up.'},
-     {e:'🔀',label:'Not Shuffling',t:'The cards appear in the same order every game. Please make them shuffle into a completely different random order each new game.'},
-     {e:'🏁',label:'Wrong Win',t:'The game says I won before I matched all the pairs. Please fix the win condition so it only triggers when all pairs are matched.'},
-     {e:'📱',label:'Cards Too Small',t:'The cards are too small to tap accurately on my screen. Please make the cards bigger.'},
-   ]},
-
-  {day:6,genre:'Platformer Game',emoji:'🏃',colour:'#E8A020',
-   objective:"Students create a platform jumping game — the most technically complex day. Focus on the joy of movement first before adding enemies or collectibles.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Ask: what is your favourite platform game ever? What made jumping in it feel so good?'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt. Let 2–3 students try the controls. Discuss what makes it fun.'},
-     {time:'20–50 min',label:'Students Build',desc:'Many students will need help with collision fixes today. Prioritise those students.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast double jump upgrade — it\'s the most satisfying platformer upgrade.'},
-     {time:'70–85 min',label:'Share Out',desc:'Speed run challenge — who can reach the end of someone else\'s level fastest?'},
-   ],
-   voiceTips:[
-     {label:'Most common issue today',tip:'Characters falling through platforms. Keep the "falling through platforms" Fix It prompt ready to broadcast.'},
-     {label:'World variety',tip:'Underwater slows movement, space has low gravity, jungle has vine swings, lava levels need fast movement.'},
-     {label:'Collectible ideas',tip:'Gems, pizza slices, rubber ducks, mini trophies, baby animals — anything memorable.'},
-     {label:'If movement feels bad',tip:'"Make the jump feel bouncier and more fun — reduce gravity slightly and increase jump height a little."'},
-   ],
-   starters:[
-     {e:'🏃',label:'Classic Starter',t:'Make a platform jumping game where I control a [CHARACTER] using arrow keys to run and jump. There are platforms to land on and I collect [ITEMS] for points. Add a colourful [THEME] background.'},
-     {e:'⬆️',label:'Simple Starter',t:'Create a side-scrolling platform game. My character is a [CHARACTER]. I press the right arrow to move and the up arrow or space bar to jump. Add platforms at different heights to jump between.'},
-     {e:'🌍',label:'World Starter',t:'Build a platform game set in [WORLD]. I run and jump collecting [COLLECTIBLES] for points. If I fall off the bottom of the screen I lose a life. Give me 3 lives.'},
-   ],
-   upgrades:[
-     {e:'👾',label:'Add Enemies',t:'Add simple enemies that walk back and forth on the platforms. If my character touches an enemy I lose a life.'},
-     {e:'🦅',label:'Double Jump',t:'Add a double jump ability. I can press the jump button a second time while I am already in the air to jump one more time.'},
-     {e:'↔️',label:'Moving Platforms',t:'Add some platforms that slowly move left and right. I have to time my jumps carefully to land on them.'},
-     {e:'🏁',label:'Add Goal',t:'Add a door or flag at the end of the level. When I reach it a win screen appears with a celebration and my total score.'},
-     {e:'💎',label:'Point Values',t:'Add 3 types of collectibles with different point values — common ones worth 1 point, rare ones worth 5, and special ones worth 10.'},
-   ],
-   fixes:[
-     {e:'🕳️',label:'Falling Through',t:'My character is falling through the platforms instead of standing on top of them. Please fix the platform collision detection.'},
-     {e:'🎈',label:'Floating',t:'My character floats in the air and does not fall down properly. Please fix the gravity so my character falls naturally.'},
-     {e:'🐌',label:'Bad Jump Feel',t:'The jumping feels too floaty and slow, or too heavy and fast. Please adjust the jump so it feels fun and satisfying to play.'},
-     {e:'🧱',label:'Off Screen',t:'My character can run off the left and right edges of the screen. Please add invisible walls on both sides to keep my character on screen.'},
-     {e:'⌨️',label:'Controls Broken',t:'The arrow keys and space bar are not responding to my input. Please fix the keyboard controls.'},
-   ]},
-
-  {day:7,genre:'Drawing Game',emoji:'🎨',colour:'#6C3FA0',
-   objective:"Students create a drawing tool — the most open-ended day. Encourage students to add tools that reflect their art style, not just a standard paint program.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Quick sketch challenge — draw your best emoji in 30 seconds. Who has the most recognisable one?'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt. Immediately start adding creative tools — show how prompts extend it.'},
-     {time:'20–50 min',label:'Students Build',desc:'This day has the most creative freedom. Let students experiment widely.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast stamp tool upgrade — kids love the stamp feature.'},
-     {time:'70–85 min',label:'Share Out',desc:'Art gallery — everyone makes a quick drawing in 3 minutes, display on screen.'},
-   ],
-   voiceTips:[
-     {label:'Encourage uniqueness',tip:'"What tool do you wish existed in a real painting app that doesn\'t exist?" — then help them ask Claude to build it.'},
-     {label:'Cool brush ideas to suggest',tip:'Glitter brush (sparkle dots), rainbow brush (changes colour automatically), blur brush, neon glow brush.'},
-     {label:'If drawing is choppy',tip:'"Make the drawing lines smoother so they look like real pen strokes instead of dots."'},
-     {label:'Saving drawings',tip:'Claude can add a "save as image" button that downloads the drawing. Very satisfying for students.'},
-   ],
-   starters:[
-     {e:'🖌️',label:'Classic Starter',t:'Make a drawing app where I can draw on a white canvas by clicking and dragging. Add at least 6 different colours. Add a brush size option and a clear button.'},
-     {e:'🎨',label:'Kid Starter',t:'Create a paint program for kids. I can draw freehand, pick colours, change brush size, and clear the canvas. Make the colour buttons big and easy to press.'},
-     {e:'🌈',label:'Full Featured',t:'Build a drawing tool with a white canvas. Add rainbow colours, an eraser tool, a fill bucket, and a download button to save my drawing as an image file.'},
-   ],
-   upgrades:[
-     {e:'🎭',label:'Add Stamps',t:'Add emoji stamp tools. I click a stamp button to select it and then click anywhere on the canvas to place that emoji as a stamp in my drawing.'},
-     {e:'💨',label:'Spray Paint',t:'Add a spray paint mode that makes scattered speckled dots like a real spray can. The longer I hold the mouse button the more paint appears.'},
-     {e:'↩️',label:'Undo/Redo',t:'Add an undo button and a redo button so I can fix mistakes without having to clear the whole canvas and start over.'},
-     {e:'⭐',label:'Brush Shapes',t:'Add different brush shape options — a round brush, a square brush, and a star-shaped brush that each make different marks.'},
-     {e:'🖼️',label:'Backgrounds',t:'Add a background chooser so I can pick a coloured or patterned background to draw on instead of just plain white.'},
-   ],
-   fixes:[
-     {e:'🖱️',label:'Not Drawing',t:'The drawing is not following my mouse cursor when I click and drag. Please fix it so drawing tracks exactly where I move.'},
-     {e:'🎨',label:'Colour Not Changing',t:'When I click a colour button the drawing colour does not change. Please fix the colour picker so it works.'},
-     {e:'🧹',label:'Clear Resets Colour',t:'When I click the clear button it also resets my colour choice. Please fix it so clear only erases the drawing, not the colour selection.'},
-     {e:'📏',label:'Lines Too Thin',t:'The drawing lines are too thin and hard to see clearly. Please make the default brush size bigger.'},
-     {e:'📐',label:'Drawing Outside',t:'When I draw near the edge of the canvas the drawing goes outside the white area. Please keep all drawing strictly inside the canvas.'},
-   ]},
-
-  {day:8,genre:'Pet Simulator',emoji:'🐾',colour:'#E8A020',
-   objective:"Students create a virtual pet. The personal connection students feel to their pet makes this the most emotionally engaging day of the program.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Ask: if you could have any pet — even an imaginary one — what would it be? What would you name it?'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-voted pet. Show the meters going down. Discuss what makes a virtual pet compelling.'},
-     {time:'20–50 min',label:'Students Build',desc:'Students name their pets and personalise them. Naming creates attachment — encourage it.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast the evolution/mood upgrade — students love seeing their pet change.'},
-     {time:'70–85 min',label:'Share Out',desc:'Pet show — everyone introduces their pet character with its name and one special quality.'},
-   ],
-   voiceTips:[
-     {label:'Names make it real',tip:'"My pet is a purple dragon named Sparky who loves eating clouds" — the detail makes Claude build a richer game.'},
-     {label:'Meter speed',tip:'If meters drain too fast, broadcast the fix prompt about meter speed — very common on this day.'},
-     {label:'Expression emoji',tip:'Encourage students to tell Claude what emoji faces to use: happy=😊, hungry=😤, tired=😪, very happy=🥰.'},
-     {label:'If buttons do nothing',tip:'This is the second most common issue. Keep the "buttons not working" fix prompt ready.'},
-   ],
-   starters:[
-     {e:'🐾',label:'Classic Starter',t:'Make a virtual pet game where I take care of a [PET]. It has hunger, happiness, and energy meters. I click Feed, Play, and Sleep buttons. The pet shows different emoji faces when it is happy or sad.'},
-     {e:'📊',label:'Meter Starter',t:'Create a pet simulator with a [PET]. Add meters for hunger, fun, and tiredness that go down over time. I click buttons to refill them. If a meter hits zero the pet becomes visibly unhappy.'},
-     {e:'🥚',label:'Tamagotchi Starter',t:'Build a Tamagotchi-style game with a [PET] named [NAME]. Show its mood with a big emoji face in the centre. Buttons for Feed, Play, and Sleep. Add a fun animation when I press each button.'},
-   ],
-   upgrades:[
-     {e:'📅',label:'Add Aging',t:'Add a day counter that increases over time. As the day count gets higher the pet grows and changes how it looks — maybe from baby to adult to elder.'},
-     {e:'🛒',label:'Add Store',t:'Add a shop where I can buy special foods and toys using coins I earn by keeping the pet happy. Different items give different amounts of happiness or energy.'},
-     {e:'✨',label:'Add Evolution',t:'Add a happiness milestone — if I keep all the pet\'s meters above 80 percent for long enough, the pet evolves into a special rare glowing form.'},
-     {e:'🎮',label:'Add Mini Game',t:'Add a mini game I can play with my pet to boost its happiness quickly. It can be simple like clicking bubbles or catching falling treats.'},
-     {e:'💾',label:'Add Save',t:'Add a feature that saves the pet\'s name, stats, and day count to the browser so my pet is still there when I open the game again later.'},
-   ],
-   fixes:[
-     {e:'⚡',label:'Meters Too Fast',t:'The hunger and energy meters are going down way too fast and I cannot keep up. Please make them decrease much more slowly.'},
-     {e:'🖱️',label:'Buttons Not Working',t:'The Feed, Play, and Sleep buttons are not doing anything when I click them. Please fix the buttons so they work correctly.'},
-     {e:'😊',label:'Face Not Changing',t:'The pet\'s emoji face is not updating to show different emotions. Please fix the expressions so the face changes based on the meter levels.'},
-     {e:'💯',label:'Over 100%',t:'The meters are going above 100 percent when I fill them. Please cap all meters at a maximum of 100.'},
-     {e:'😢',label:'Always Unhappy',t:'The game says my pet is unhappy even when all three meters are completely full. Please fix the happiness calculation.'},
-   ]},
-
-  {day:9,genre:'Word Game',emoji:'📝',colour:'#1A5EAB',
-   objective:"Students create a vocabulary-based game. Connect the word topics to things students genuinely know — sports, animals, school subjects, their favourite shows.",
-   timing:[
-     {time:'0–10 min',label:'Warm Up',desc:'Quick word challenge — I describe an animal without saying its name, class guesses. Then students take turns.'},
-     {time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-chosen topic. Show how hints work.'},
-     {time:'20–50 min',label:'Students Build',desc:'Students choose their topic and write their own word list if needed. Allow more thinking time today.'},
-     {time:'50–70 min',label:'Upgrade Round',desc:'Broadcast streak counter upgrade — adds competition element.'},
-     {time:'70–85 min',label:'Share Out',desc:'Word challenge swap — students try each other\'s word games.'},
-   ],
-   voiceTips:[
-     {label:'Topic choice is key',tip:'"Words about things in my bedroom" or "words about my favourite video game" are far more engaging than generic topic lists.'},
-     {label:'Custom word lists',tip:'Students can say "use these exact words: [list]" to Claude — great for themed games around class topics.'},
-     {label:'Hint calibration',tip:'If hints give too much away: "Make the hints less obvious — just give a very small clue, not the answer."'},
-     {label:'Spelling in game',tip:'Encourage students to check their game\'s word list for spelling mistakes before sharing.'},
-   ],
-   starters:[
-     {e:'🔡',label:'Hangman Starter',t:'Make a word guessing game like Hangman but with a fun [THEME] design — not a stick figure. I guess one letter at a time. Show blanks for each letter. After 6 wrong guesses I lose. Add a hint button.'},
-     {e:'🔀',label:'Unscramble Starter',t:'Create a word unscramble game about [TOPIC]. Show me a scrambled word and I figure out what it says. Give me 3 hints I can click if I am stuck. Add a score counter and a next word button.'},
-     {e:'🔍',label:'Word Search Starter',t:'Build a word search puzzle with [NUMBER] hidden words all about [TOPIC]. I click the first and last letter of each word to select it. Highlight found words in different bright colours.'},
-   ],
-   upgrades:[
-     {e:'📚',label:'Categories',t:'Add a category chooser at the start so I can pick which topic I want — animals, food, or sports — and the game loads different words for each.'},
-     {e:'🔥',label:'Streak Bonus',t:'Add a streak counter that gives double points when I get 3 or more correct answers in a row without any mistakes.'},
-     {e:'📊',label:'Difficulty',t:'Add difficulty levels at the start — Easy mode uses long common words, Hard mode uses short tricky words.'},
-     {e:'👥',label:'Two Player',t:'Add a 2-player mode where two people take turns guessing. Keep a score for each player and show who wins at the end.'},
-     {e:'🎉',label:'Win Animation',t:'When I find a word or guess correctly, make it fly across the screen with a burst of confetti or coloured stars.'},
-   ],
-   fixes:[
-     {e:'⌨️',label:'Letters Not Working',t:'When I click the letter buttons nothing is registering. Please fix the letter input so my guesses are recorded.'},
-     {e:'✅',label:'Wrong Marking',t:'The game is marking wrong answers as correct. Please fix the answer checking so only the right answer gets points.'},
-     {e:'💡',label:'Hint Too Obvious',t:'The hint button is basically giving away the whole answer. Please make the hints more subtle — just a small clue.'},
-     {e:'➡️',label:'Not Advancing',t:'After I solve a word the game gets stuck and does not move to the next word. Please fix the next word button.'},
-     {e:'✏️',label:'Spelling Mistakes',t:'Some of the words in my game have spelling mistakes. Please check all the words and fix any that are spelled incorrectly.'},
-   ]},
-
-  {day:10,genre:'My Own Game',emoji:'🌟',colour:'#C0392B',
-   objective:"Students design and build their own completely original game. No constraints on genre, theme, or mechanics. The instructor's role is to help students articulate their vision clearly.",
-   timing:[
-     {time:'0–15 min',label:'Design Time',desc:'Students sketch their game idea on paper first — no devices. What type of game? What happens? How do you win?'},
-     {time:'15–25 min',label:'Ideas Share',desc:'Each student explains their game idea in 20 seconds. Class gives one positive reaction to each.'},
-     {time:'25–60 min',label:'Build Time',desc:'Students use prompts to build their game. Encourage 3 rounds of improvement minimum.'},
-     {time:'60–75 min',label:'Upgrade Round',desc:'Each student identifies their game\'s weakest feature and broadcasts a fix.'},
-     {time:'75–85 min',label:'Game Show',desc:'Final showcase — each student gives a 60-second demo of their original game.'},
-   ],
-   voiceTips:[
-     {label:'Help vague ideas',tip:'If a student says "I want a fun game" — ask: "What do you DO in the game? What happens if you win? What happens if you lose?"'},
-     {label:'The magic formula',tip:'Every game needs: a CHARACTER, a GOAL, an OBSTACLE, and a WIN CONDITION. Help students define all four.'},
-     {label:'Prompt structuring help',tip:'"I want to make a game called [NAME]. The player is a [CHARACTER]. They have to [GOAL]. The challenge is [OBSTACLE]. You win when [WIN CONDITION]."'},
-     {label:'If the idea is too complex',tip:'"Let\'s make the simplest version of your idea first. We can add more later." Start simple, then layer in features.'},
-   ],
-   starters:[
-     {e:'💡',label:'Design Template',t:'Make me a [GAME TYPE] game called [GAME NAME] about [YOUR TOPIC]. The player does [MAIN ACTION]. The goal is to [WIN CONDITION]. Make it look [DESCRIBE STYLE] and add [SPECIAL FEATURE] that makes it unique.'},
-     {e:'🌟',label:'Free Design',t:'I want to create my own unique game. It is called [YOUR GAME NAME]. Here is how it works: [EXPLAIN YOUR RULES IN YOUR OWN WORDS]. Make it colourful, fun, and easy for kids my age to understand.'},
-     {e:'🎮',label:'Mashup',t:'Build a game that combines [GAME TYPE 1] and [GAME TYPE 2] together. Set it in [YOUR WORLD]. The player controls [YOUR CHARACTER] and the goal is [YOUR GOAL]. Add something surprising that players will not expect.'},
-   ],
-   upgrades:[
-     {e:'✨',label:'Best Feature',t:'Add the most fun feature from another game I played this week. Make it fit naturally into my game.'},
-     {e:'📖',label:'Add Story',t:'Add a story and characters with names and personalities that make this game feel like it has its own world and universe.'},
-     {e:'👥',label:'Two Players',t:'Add a 2-player mode where two people play at the same time on one keyboard — one player uses WASD and the other uses arrow keys.'},
-     {e:'📈',label:'Three Levels',t:'Turn my game into 3 levels where each level has a new twist, surprise, or extra challenge that the player has not seen before.'},
-     {e:'🔐',label:'Secret Mode',t:'Add a secret mode that unlocks when the player types a secret code on the keyboard. Make the secret mode extra fun or silly.'},
-   ],
-   fixes:[
-     {e:'🔧',label:'Custom Fix',t:'Something is broken in my game. Here is exactly what is happening: [DESCRIBE THE PROBLEM IN DETAIL]. Please find and fix the issue.'},
-     {e:'😴',label:'Too Easy',t:'My game is too easy and players get bored quickly. Please make it more challenging and exciting without making it frustrating for Grade 4 kids.'},
-     {e:'😤',label:'Too Hard',t:'My game is too difficult and players give up. Please make it a little bit easier so Grade 4 and Grade 5 kids can enjoy and complete it.'},
-     {e:'🎨',label:'Looks Plain',t:'My game looks plain and unexciting. Please make it more colourful, add animations, and make the overall design more fun and visually interesting.'},
-     {e:'🎬',label:'No Screens',t:'My game jumps straight into gameplay. Please add a proper start screen with my game\'s name and a play button, and an end screen with a play again button.'},
-   ]},
+  {day:1,genre:'Quiz Game',emoji:'🧠',colour:'#6C3FA0',objective:"Students create a quiz game about any topic they love using one starter prompt.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Ask: what would you quiz your friends about? Collect ideas on board.'},{time:'10–20 min',label:'Demo Live',desc:'You run the starter prompt on projector. Show the result.'},{time:'20–50 min',label:'Students Build',desc:'Each student picks their topic and uses a starter prompt.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast an upgrade prompt. Students add one feature.'},{time:'70–85 min',label:'Share Out',desc:'3–4 students demo their quiz to the class.'}],voiceTips:[{label:'Replace the fill',tip:'Remind kids to say their actual topic instead of [YOUR TOPIC]. Demo this first.'},{label:'Keep it specific',tip:'"quiz about my dog Bruno" works better than "quiz about dogs".'},{label:'If Claude asks questions',tip:'Just answer naturally — Claude will use those answers to improve the game.'},{label:'If output is just text',tip:'Say "please give me the complete HTML file I can open in a browser".'}],starters:[{e:'🎤',label:'Classic',t:'Make me a fun quiz game about [YOUR TOPIC] with 5 questions. Make it colourful and exciting. When I get an answer right, show a big celebration. Show the correct answer when I get it wrong.'},{e:'🌈',label:'Simple',t:'Create a quiz game about [YOUR TOPIC] for Grade 4 students. Add a score counter, bright colours, and make each question appear one at a time.'},{e:'🏆',label:'Game Show',t:'Build me a quiz about [YOUR TOPIC]. Make it look like a game show with bright lights and exciting colours. Show my total score at the end with a fun message.'}],upgrades:[{e:'⏱️',label:'Add Timer',t:'Add a timer that counts down 15 seconds for each question. If time runs out, show the answer and move to the next question automatically.'},{e:'🎵',label:'Add Sound',t:'Add sound effects — a happy celebration sound when I get it right and a buzzer sound when I get it wrong. Make the correct answer flash green.'},{e:'🏅',label:'Better Ending',t:'Add a final score screen at the end that shows a different message depending on how well I did. Like "Quiz Champion!" for a perfect score.'},{e:'🔀',label:'Shuffle',t:'Make the questions appear in a different random order every time I play so it feels new each time.'},{e:'4️⃣',label:'Multiple Choice',t:'Add 4 answer buttons for each question. Make wrong answer buttons shake or wiggle when I click them.'}],fixes:[{e:'🖱️',label:'Buttons Broken',t:'The answer buttons are not working when I click them. Please fix the clicking so I can select my answer.'},{e:'🔢',label:'Score Not Working',t:'The score is not going up when I get answers right. Please fix the score counter.'},{e:'➡️',label:'Not Advancing',t:'The quiz is not moving to the next question after I answer. Please fix it so it goes to the next question automatically.'},{e:'🔡',label:'Text Too Small',t:'All the text is too small to read easily. Please make all the words and buttons bigger.'},{e:'🎨',label:'Hard to See',t:'The colours are hard to see. Please make the background and text colours easier to read.'}]},
+  {day:2,genre:'Maze Game',emoji:'🌀',colour:'#1A5EAB',objective:"Students create a maze game with arrow key controls.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Ask: what is the most confusing place you have ever been?'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt on projector. Show how arrow keys work.'},{time:'20–50 min',label:'Students Build',desc:'Students pick a character and theme.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast timer upgrade.'},{time:'70–85 min',label:'Share Out',desc:'Race challenge — who can solve each other\'s mazes fastest?'}],voiceTips:[{label:'Theme ideas',tip:'Jungle, haunted house, underwater, space station, candy land.'},{label:'If maze is too simple',tip:'Suggest the bigger maze upgrade to add more paths.'},{label:'Character names help',tip:'"a tiny mouse named Max" gives Claude more to work with.'},{label:'Arrow key fix',tip:'If controls don\'t work, use the Fix It prompt about arrow keys.'}],starters:[{e:'🎮',label:'Classic',t:'Make me a maze game where I control a [CHARACTER] using arrow keys. The maze should look like a [THEME]. I need to reach the exit to win. Make it colourful and show a celebration when I finish.'},{e:'⭐',label:'Simple',t:'Create a maze game for kids. I use arrow keys to move. There are walls I cannot walk through. When I reach the star at the end I win and see a celebration.'},{e:'🗺️',label:'Adventure',t:'Build a maze game where I am a [CHARACTER] trying to reach [GOAL]. Add arrow key controls and show how many steps I have taken at the top.'}],upgrades:[{e:'⏱️',label:'Add Timer',t:'Add a timer that counts how many seconds it takes me to finish the maze. Show my best time so I can try to beat it each game.'},{e:'🪙',label:'Add Coins',t:'Add collectible coins hidden in different parts of the maze that I can pick up for bonus points.'},{e:'📈',label:'Add Levels',t:'Make the maze bigger and add 3 levels. Each level should have a more complex maze than the last.'},{e:'👾',label:'Add Enemy',t:'Add an enemy character that wanders through the maze. If it touches me I lose a life. Give me 3 lives.'},{e:'🗺️',label:'Add Mini Map',t:'Add a small map in the corner of the screen that shows my position in the maze with a little dot.'}],fixes:[{e:'🧱',label:'Walking Through Walls',t:'My character is walking through the walls. Please fix the wall collision.'},{e:'⌨️',label:'Keys Not Working',t:'The arrow keys are not moving my character at all. Please fix the keyboard controls.'},{e:'🐢',label:'Too Fast',t:'My character moves too fast. Please make the movement speed slower.'},{e:'🚪',label:'No Exit',t:'The exit is not showing up on screen. Please make the exit clearly visible.'},{e:'👁️',label:'Hard to See',t:'The maze is too hard to see. Please make the walls and paths clearer.'}]},
+  {day:3,genre:'Story Adventure',emoji:'📖',colour:'#D4620E',objective:"Students create branching choice stories.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Play a quick verbal choose-your-own: "You find a door. Knock or open it?"'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-voted theme.'},{time:'20–55 min',label:'Students Build',desc:'Students spend time on their setting and character.'},{time:'55–70 min',label:'Upgrade Round',desc:'Broadcast the emoji art upgrade.'},{time:'70–85 min',label:'Share Out',desc:'Two students share their story — class plays it live.'}],voiceTips:[{label:'Setting up the world',tip:'Encourage detail: "a dark forest with glowing mushrooms and a broken bridge".'},{label:'Multiple endings',tip:'Story needs at least one good ending and one surprise ending.'},{label:'If story too short',tip:'Use: "Make the story longer — add 3 more choice moments before the ending."'},{label:'Character names',tip:'"A girl called Maya who is scared of nothing" is much richer to work with.'}],starters:[{e:'🗺️',label:'Classic',t:'Make me a choose-your-own-adventure story where I am a [CHARACTER]. The story starts at [PLACE]. At each step I get 2 choices. Make it exciting with lots of surprises and use big colourful text.'},{e:'✨',label:'Simple',t:'Create a story game where I play as a [CHARACTER] who needs to [GOAL]. Give me choices at each step that lead to different endings. Make it fun and exciting for Grade 4 kids.'},{e:'🎭',label:'Endings',t:'Build an adventure story game set in [PLACE]. I make choices that change the story. Give it at least 3 different endings — one good, one bad, and one totally surprising.'}],upgrades:[{e:'🖼️',label:'Add Art',t:'Add emoji pictures at the top of each scene to show what the place looks like. Use lots of emoji to create a visual scene.'},{e:'🎒',label:'Add Inventory',t:'Add an inventory system where I can collect items during the story and use them to unlock special choices.'},{e:'❤️',label:'Add Health',t:'Add a health meter that starts at 100. Some choices take away health. If health reaches zero I get a game over.'},{e:'🎵',label:'Add Sound',t:'Add sound effects for different moments in the story — creepy, happy, and funny sounds.'},{e:'📜',label:'Add Recap',t:'Add a recap screen at the very end that lists all the choices I made during the story.'}],fixes:[{e:'🖱️',label:'Buttons Not Working',t:'The choice buttons are not doing anything when I click them. Please fix them.'},{e:'🔀',label:'Wrong Scene',t:'After I make a choice the story jumps to the wrong scene. Please fix the story flow.'},{e:'📄',label:'Text Too Long',t:'The text is too long and hard to read. Please break it into shorter paragraphs.'},{e:'🏁',label:'No Ending',t:'The story does not seem to end properly. Please fix the ending.'},{e:'🔙',label:'Back Button Wrong',t:'The back button is taking me to the wrong place. Please fix the navigation.'}]},
+  {day:4,genre:'Catch Game',emoji:'🎯',colour:'#2D8A3E',objective:"Students build an action game with real-time movement.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Ask: if it rained any food from the sky, what would you catch and what would you run from?'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt. Show how changing items changes the feel.'},{time:'20–50 min',label:'Students Build',desc:'Students spend time choosing their theme carefully.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast the golden item upgrade.'},{time:'70–85 min',label:'Share Out',desc:'High score challenge — who gets the highest score in 2 minutes?'}],voiceTips:[{label:'Creative item ideas',tip:'Pizza and broccoli, gold coins and spiders, kittens and dogs.'},{label:'Character choices',tip:'A basket, a chef, a superhero, a robot with a magnet.'},{label:'If no bad items',tip:'Use: "Add [BAD THINGS] that also fall — if I catch them I lose a life."'},{label:'Difficulty balance',tip:'Too easy? "Make things fall 50% faster and increase speed as score goes up."'}],starters:[{e:'🧺',label:'Classic',t:'Make a catch game where [GOOD THINGS] fall from the sky and I move a basket left and right to catch them. [BAD THINGS] also fall and I must avoid them. Add a score counter and 3 lives.'},{e:'🏃',label:'Character',t:'Create a game where I control a [CHARACTER] at the bottom of the screen using arrow keys. Good things fall and give me points, bad things fall and take away lives. Make it colourful.'},{e:'📈',label:'Speed',t:'Build a falling objects game. Good things are [GOOD]. Bad things are [BAD]. Things fall faster as my score gets higher. I move left and right to catch or dodge them.'}],upgrades:[{e:'💨',label:'Speed Up',t:'Make everything fall faster as my score gets higher. Add a level counter that increases every 50 points.'},{e:'⭐',label:'Golden Item',t:'Add a special golden or sparkly item that appears randomly — catching it gives 5 times the normal points.'},{e:'🛡️',label:'Shield',t:'Add a shield power-up that falls occasionally. Catching it protects me from the very next bad item.'},{e:'💥',label:'Catch Animation',t:'Make caught items do a little explosion animation. Show a score number flying up where I caught it.'},{e:'🏆',label:'High Score',t:'Add a high score display that saves my best score and shows it every time I play.'}],fixes:[{e:'⬅️',label:'Controls Broken',t:'My basket or character is not moving when I press the arrow keys. Please fix the controls.'},{e:'📦',label:'Off Screen',t:'The falling objects are going off the sides of the screen. Please keep all objects inside the game area.'},{e:'💔',label:'Lives Not Working',t:'I am catching bad items but my lives are not going down. Please fix the life counter.'},{e:'🎮',label:'No Game Over',t:'When I run out of lives the game just continues. Please add a game over screen.'},{e:'😴',label:'Too Boring',t:'Everything falls at exactly the same speed. Please make items fall at different random speeds.'}]},
+  {day:5,genre:'Memory Game',emoji:'🃏',colour:'#C0392B',objective:"Students create a memory matching game.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Quick verbal memory round — show 10 items for 10 seconds, how many can they name?'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-suggested theme.'},{time:'20–50 min',label:'Students Build',desc:'Students should spend 10 minutes choosing their theme first.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast the timer upgrade.'},{time:'70–85 min',label:'Share Out',desc:'Memory championship — who completes another student\'s game fastest?'}],voiceTips:[{label:'Theme ideas',tip:'Their favourite animals, things in their bedroom, school subjects, planets.'},{label:'Personalise it',tip:'"things I love — pizza, my dog, football, my best friend" is better than just "food".'},{label:'Card count',tip:'12 cards (6 pairs) is ideal for Grade 4/5. 16 cards is harder.'},{label:'Common issue',tip:'If cards flip back when matched — use the Fix It prompt about matched cards.'}],starters:[{e:'🎴',label:'Classic',t:'Make a memory matching card game with [THEME] pictures on the cards. Show 12 cards face down. I click 2 cards at a time to flip them. Matching pairs stay face up. Count my total attempts.'},{e:'🧠',label:'Score',t:'Create a memory game with [NUMBER] pairs of matching [THEME] cards. Shuffle them randomly every new game. Show my score and a celebration when I match all pairs.'},{e:'✨',label:'Animation',t:'Build a flip-card memory game with [THEME] on each card. I try to find all matching pairs in as few clicks as possible. Make the cards flip with a smooth satisfying animation.'}],upgrades:[{e:'⏱️',label:'Add Timer',t:'Add a countdown timer. I have 60 seconds to match all the pairs before time runs out.'},{e:'📊',label:'Add Levels',t:'Add difficulty levels — Easy has 8 cards, Medium has 16, Hard has 24 cards.'},{e:'💃',label:'Match Animation',t:'When I find a matching pair, make both cards do a bounce animation before they stay face up.'},{e:'⭐',label:'Star Rating',t:'Add a star rating at the end — 3 stars for finishing in very few clicks, 2 for average, 1 for slow.'},{e:'❌',label:'Wrong Limit',t:'Add a rule that ends the game if I make 10 wrong matches total.'}],fixes:[{e:'🖱️',label:'Multi-Click Bug',t:'I can click more than 2 cards at the same time. Please fix it so only 2 can be flipped at once.'},{e:'🔄',label:'Matches Flip Back',t:'Matched cards are flipping back face down. Please fix it so matched pairs stay face up permanently.'},{e:'🔀',label:'Not Shuffling',t:'The cards appear in the same order every game. Please make them shuffle randomly each new game.'},{e:'🏁',label:'Wrong Win',t:'The game says I won before I matched all the pairs. Please fix the win condition.'},{e:'📱',label:'Cards Too Small',t:'The cards are too small to tap accurately. Please make the cards bigger.'}]},
+  {day:6,genre:'Platformer Game',emoji:'🏃',colour:'#E8A020',objective:"Students create a platform jumping game — the most technically complex day.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Ask: what is your favourite platform game? What made jumping feel so good?'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt. Let 2–3 students try the controls.'},{time:'20–50 min',label:'Students Build',desc:'Many students will need collision fixes. Prioritise those students.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast double jump upgrade — the most satisfying platformer upgrade.'},{time:'70–85 min',label:'Share Out',desc:'Speed run challenge — who reaches the end of someone else\'s level fastest?'}],voiceTips:[{label:'Most common issue',tip:'Characters falling through platforms. Keep the "falling through" Fix It ready to broadcast.'},{label:'World variety',tip:'Underwater slows movement, space has low gravity, jungle has vine swings.'},{label:'Collectible ideas',tip:'Gems, pizza slices, rubber ducks, mini trophies, baby animals.'},{label:'If movement feels bad',tip:'"Make the jump feel bouncier — reduce gravity slightly and increase jump height a little."'}],starters:[{e:'🏃',label:'Classic',t:'Make a platform jumping game where I control a [CHARACTER] using arrow keys to run and jump. There are platforms to land on and I collect [ITEMS] for points. Add a colourful [THEME] background.'},{e:'⬆️',label:'Simple',t:'Create a side-scrolling platform game. My character is a [CHARACTER]. I press the right arrow to move and the up arrow or space bar to jump. Add platforms at different heights to jump between.'},{e:'🌍',label:'World',t:'Build a platform game set in [WORLD]. I run and jump collecting [COLLECTIBLES] for points. If I fall off the bottom of the screen I lose a life. Give me 3 lives.'}],upgrades:[{e:'👾',label:'Add Enemies',t:'Add simple enemies that walk back and forth on the platforms. If my character touches an enemy I lose a life.'},{e:'🦅',label:'Double Jump',t:'Add a double jump ability. I can press the jump button a second time while already in the air to jump one more time.'},{e:'↔️',label:'Moving Platforms',t:'Add some platforms that slowly move left and right. I have to time my jumps carefully to land on them.'},{e:'🏁',label:'Add Goal',t:'Add a door or flag at the end of the level. When I reach it a win screen appears with my total score.'},{e:'💎',label:'Point Values',t:'Add 3 types of collectibles — common ones worth 1 point, rare worth 5, and special worth 10.'}],fixes:[{e:'🕳️',label:'Falling Through',t:'My character is falling through the platforms instead of standing on top of them. Please fix the collision detection.'},{e:'🎈',label:'Floating',t:'My character floats in the air and does not fall down properly. Please fix the gravity.'},{e:'🐌',label:'Bad Jump Feel',t:'The jumping feels too floaty or too heavy. Please adjust it so it feels fun and satisfying.'},{e:'🧱',label:'Off Screen',t:'My character can run off the edges of the screen. Please add invisible walls on both sides.'},{e:'⌨️',label:'Controls Broken',t:'The arrow keys and space bar are not responding. Please fix the keyboard controls.'}]},
+  {day:7,genre:'Drawing Game',emoji:'🎨',colour:'#6C3FA0',objective:"Students create a drawing tool — the most open-ended day.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Quick sketch challenge — draw your best emoji in 30 seconds.'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt. Immediately start adding creative tools.'},{time:'20–50 min',label:'Students Build',desc:'This day has the most creative freedom. Let students experiment widely.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast stamp tool upgrade — kids love the stamp feature.'},{time:'70–85 min',label:'Share Out',desc:'Art gallery — everyone makes a quick drawing in 3 minutes.'}],voiceTips:[{label:'Encourage uniqueness',tip:'"What tool do you wish existed in a real painting app?" — help them ask Claude to build it.'},{label:'Cool brush ideas',tip:'Glitter brush (sparkle dots), rainbow brush, blur brush, neon glow brush.'},{label:'If drawing is choppy',tip:'"Make the drawing lines smoother so they look like real pen strokes instead of dots."'},{label:'Saving drawings',tip:'Claude can add a "save as image" button that downloads the drawing.'}],starters:[{e:'🖌️',label:'Classic',t:'Make a drawing app where I can draw on a white canvas by clicking and dragging. Add at least 6 different colours. Add a brush size option and a clear button.'},{e:'🎨',label:'Kid',t:'Create a paint program for kids. I can draw freehand, pick colours, change brush size, and clear the canvas. Make the colour buttons big and easy to press.'},{e:'🌈',label:'Full Featured',t:'Build a drawing tool with a white canvas. Add rainbow colours, an eraser tool, a fill bucket, and a download button to save my drawing as an image file.'}],upgrades:[{e:'🎭',label:'Add Stamps',t:'Add emoji stamp tools. I click a stamp button to select it and then click anywhere on the canvas to place that emoji as a stamp in my drawing.'},{e:'💨',label:'Spray Paint',t:'Add a spray paint mode that makes scattered speckled dots like a real spray can. The longer I hold the mouse button the more paint appears.'},{e:'↩️',label:'Undo/Redo',t:'Add an undo button and a redo button so I can fix mistakes without clearing the whole canvas.'},{e:'⭐',label:'Brush Shapes',t:'Add different brush shape options — a round brush, a square brush, and a star-shaped brush.'},{e:'🖼️',label:'Backgrounds',t:'Add a background chooser so I can pick a coloured or patterned background to draw on.'}],fixes:[{e:'🖱️',label:'Not Drawing',t:'The drawing is not following my mouse cursor when I click and drag. Please fix it so drawing tracks exactly where I move.'},{e:'🎨',label:'Colour Not Changing',t:'When I click a colour button the drawing colour does not change. Please fix the colour picker.'},{e:'🧹',label:'Clear Resets Colour',t:'When I click clear it also resets my colour choice. Please fix it so clear only erases the drawing.'},{e:'📏',label:'Lines Too Thin',t:'The drawing lines are too thin and hard to see. Please make the default brush size bigger.'},{e:'📐',label:'Drawing Outside',t:'When I draw near the edge the drawing goes outside the canvas. Please keep all drawing strictly inside the canvas.'}]},
+  {day:8,genre:'Pet Simulator',emoji:'🐾',colour:'#E8A020',objective:"Students create a virtual pet — the most emotionally engaging day.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Ask: if you could have any pet — even imaginary — what would it be?'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-voted pet. Show the meters going down.'},{time:'20–50 min',label:'Students Build',desc:'Students name their pets and personalise them. Naming creates attachment.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast the evolution/mood upgrade — students love seeing their pet change.'},{time:'70–85 min',label:'Share Out',desc:'Pet show — everyone introduces their pet with its name and one special quality.'}],voiceTips:[{label:'Names make it real',tip:'"A purple dragon named Sparky who loves eating clouds" makes a richer game.'},{label:'Meter speed',tip:'If meters drain too fast, broadcast the fix prompt about meter speed — very common today.'},{label:'Expression emoji',tip:'Tell Claude what emoji faces to use: happy=😊, hungry=😤, tired=😪, very happy=🥰.'},{label:'If buttons do nothing',tip:'Second most common issue. Keep the "buttons not working" fix prompt ready.'}],starters:[{e:'🐾',label:'Classic',t:'Make a virtual pet game where I take care of a [PET]. It has hunger, happiness, and energy meters. I click Feed, Play, and Sleep buttons. The pet shows different emoji faces when it is happy or sad.'},{e:'📊',label:'Meter',t:'Create a pet simulator with a [PET]. Add meters for hunger, fun, and tiredness that go down over time. I click buttons to refill them. If a meter hits zero the pet becomes visibly unhappy.'},{e:'🥚',label:'Tamagotchi',t:'Build a Tamagotchi-style game with a [PET] named [NAME]. Show its mood with a big emoji face in the centre. Buttons for Feed, Play, and Sleep. Add a fun animation when I press each button.'}],upgrades:[{e:'📅',label:'Add Aging',t:'Add a day counter that increases over time. As the day count gets higher the pet grows and changes how it looks.'},{e:'🛒',label:'Add Store',t:'Add a shop where I can buy special foods and toys using coins I earn by keeping the pet happy.'},{e:'✨',label:'Add Evolution',t:'If I keep all the pet\'s meters above 80% for long enough, the pet evolves into a special rare glowing form.'},{e:'🎮',label:'Add Mini Game',t:'Add a mini game I can play with my pet to boost its happiness quickly.'},{e:'💾',label:'Add Save',t:'Add a feature that saves the pet\'s name, stats, and day count to the browser so my pet is still there when I come back.'}],fixes:[{e:'⚡',label:'Meters Too Fast',t:'The hunger and energy meters are going down way too fast. Please make them decrease much more slowly.'},{e:'🖱️',label:'Buttons Not Working',t:'The Feed, Play, and Sleep buttons are not doing anything. Please fix the buttons so they work correctly.'},{e:'😊',label:'Face Not Changing',t:'The pet\'s emoji face is not updating to show different emotions. Please fix the expressions.'},{e:'💯',label:'Over 100%',t:'The meters are going above 100 percent when I fill them. Please cap all meters at a maximum of 100.'},{e:'😢',label:'Always Unhappy',t:'The game says my pet is unhappy even when all three meters are completely full. Please fix the happiness calculation.'}]},
+  {day:9,genre:'Word Game',emoji:'📝',colour:'#1A5EAB',objective:"Students create a vocabulary-based game.",timing:[{time:'0–10 min',label:'Warm Up',desc:'Quick word challenge — describe an animal without saying its name, class guesses.'},{time:'10–20 min',label:'Demo Live',desc:'Run starter prompt with a class-chosen topic. Show how hints work.'},{time:'20–50 min',label:'Students Build',desc:'Students choose their topic and write their own word list if needed.'},{time:'50–70 min',label:'Upgrade Round',desc:'Broadcast streak counter upgrade.'},{time:'70–85 min',label:'Share Out',desc:'Word challenge swap — students try each other\'s word games.'}],voiceTips:[{label:'Topic choice is key',tip:'"Words about things in my bedroom" is far more engaging than a generic topic list.'},{label:'Custom word lists',tip:'Students can say "use these exact words: [list]" — great for class topics.'},{label:'Hint calibration',tip:'If hints give too much away: "Make the hints less obvious — just a very small clue."'},{label:'Spelling check',tip:'Encourage students to check their game\'s word list for spelling mistakes before sharing.'}],starters:[{e:'🔡',label:'Hangman',t:'Make a word guessing game like Hangman but with a fun [THEME] design — not a stick figure. I guess one letter at a time. Show blanks for each letter. After 6 wrong guesses I lose. Add a hint button.'},{e:'🔀',label:'Unscramble',t:'Create a word unscramble game about [TOPIC]. Show me a scrambled word and I figure out what it says. Give me 3 hints I can click if I am stuck. Add a score counter and a next word button.'},{e:'🔍',label:'Word Search',t:'Build a word search puzzle with [NUMBER] hidden words all about [TOPIC]. I click the first and last letter of each word to select it. Highlight found words in different bright colours.'}],upgrades:[{e:'📚',label:'Categories',t:'Add a category chooser at the start so I can pick which topic I want — animals, food, or sports — and the game loads different words for each.'},{e:'🔥',label:'Streak Bonus',t:'Add a streak counter that gives double points when I get 3 or more correct answers in a row without any mistakes.'},{e:'📊',label:'Difficulty',t:'Add difficulty levels at the start — Easy mode uses long common words, Hard mode uses short tricky words.'},{e:'👥',label:'Two Player',t:'Add a 2-player mode where two people take turns guessing. Keep a score for each player and show who wins at the end.'},{e:'🎉',label:'Win Animation',t:'When I find a word or guess correctly, make it fly across the screen with a burst of confetti or coloured stars.'}],fixes:[{e:'⌨️',label:'Letters Not Working',t:'When I click the letter buttons nothing is registering. Please fix the letter input so my guesses are recorded.'},{e:'✅',label:'Wrong Marking',t:'The game is marking wrong answers as correct. Please fix the answer checking.'},{e:'💡',label:'Hint Too Obvious',t:'The hint button is basically giving away the whole answer. Please make the hints more subtle.'},{e:'➡️',label:'Not Advancing',t:'After I solve a word the game gets stuck. Please fix the next word button.'},{e:'✏️',label:'Spelling Mistakes',t:'Some of the words in my game have spelling mistakes. Please check all the words and fix any that are spelled incorrectly.'}]},
+  {day:10,genre:'My Own Game',emoji:'🌟',colour:'#C0392B',objective:"Students design and build their own completely original game.",timing:[{time:'0–15 min',label:'Design Time',desc:'Students sketch their game idea on paper first — no devices. What type? What happens? How do you win?'},{time:'15–25 min',label:'Ideas Share',desc:'Each student explains their game idea in 20 seconds. Class gives one positive reaction.'},{time:'25–60 min',label:'Build Time',desc:'Students use prompts to build their game. Encourage 3 rounds of improvement minimum.'},{time:'60–75 min',label:'Upgrade Round',desc:'Each student identifies their game\'s weakest feature and broadcasts a fix.'},{time:'75–85 min',label:'Game Show',desc:'Final showcase — each student gives a 60-second demo of their original game.'}],voiceTips:[{label:'Help vague ideas',tip:'If a student says "I want a fun game" — ask: "What do you DO? What happens if you win? Lose?"'},{label:'The magic formula',tip:'Every game needs: a CHARACTER, a GOAL, an OBSTACLE, and a WIN CONDITION.'},{label:'Prompt structure',tip:'"I want to make a game called [NAME]. The player is a [CHARACTER]. They have to [GOAL]. The challenge is [OBSTACLE]. You win when [WIN CONDITION]."'},{label:'If idea is too complex',tip:'"Let\'s make the simplest version of your idea first. We can add more later."'}],starters:[{e:'💡',label:'Design Template',t:'Make me a [GAME TYPE] game called [GAME NAME] about [YOUR TOPIC]. The player does [MAIN ACTION]. The goal is to [WIN CONDITION]. Make it look [DESCRIBE STYLE] and add [SPECIAL FEATURE] that makes it unique.'},{e:'🌟',label:'Free Design',t:'I want to create my own unique game. It is called [YOUR GAME NAME]. Here is how it works: [EXPLAIN YOUR RULES IN YOUR OWN WORDS]. Make it colourful, fun, and easy for kids my age to understand.'},{e:'🎮',label:'Mashup',t:'Build a game that combines [GAME TYPE 1] and [GAME TYPE 2] together. Set it in [YOUR WORLD]. The player controls [YOUR CHARACTER] and the goal is [YOUR GOAL]. Add something surprising that players will not expect.'}],upgrades:[{e:'✨',label:'Best Feature',t:'Add the most fun feature from another game I played this week. Make it fit naturally into my game.'},{e:'📖',label:'Add Story',t:'Add a story and characters with names and personalities that make this game feel like it has its own world.'},{e:'👥',label:'Two Players',t:'Add a 2-player mode where two people play at the same time on one keyboard.'},{e:'📈',label:'Three Levels',t:'Turn my game into 3 levels where each level has a new twist, surprise, or extra challenge.'},{e:'🔐',label:'Secret Mode',t:'Add a secret mode that unlocks when the player types a secret code on the keyboard.'}],fixes:[{e:'🔧',label:'Custom Fix',t:'Something is broken in my game. Here is exactly what is happening: [DESCRIBE THE PROBLEM IN DETAIL]. Please find and fix the issue.'},{e:'😴',label:'Too Easy',t:'My game is too easy and players get bored quickly. Please make it more challenging and exciting.'},{e:'😤',label:'Too Hard',t:'My game is too difficult and players give up. Please make it a little bit easier for Grade 4 and 5 kids.'},{e:'🎨',label:'Looks Plain',t:'My game looks plain and unexciting. Please make it more colourful, add animations, and make the overall design more fun.'},{e:'🎬',label:'No Screens',t:'My game jumps straight into gameplay. Please add a proper start screen with my game\'s name and a play button, and an end screen with a play again button.'}]},
 ];
 
-let activeDay=1;
-let broadcastText='';
+let profile=null,activeDay=1,broadcastText='',dayUnlocks={},students=[],progress={},uploads=[];
 
-// ── SIDEBAR ──────────────────────────────────────────────────────────────────
-function renderNav(){
-  document.getElementById('day-nav').innerHTML=DAYS.map(d=>`
-    <div class="day-item ${d.day===activeDay?'active':''}" onclick="setDay(${d.day})">
-      <div class="di-icon" style="background:${d.colour}22;color:${d.colour}">${d.emoji}</div>
-      <div class="di-info">
-        <div class="di-title">Day ${d.day}: ${d.genre}</div>
-      </div>
-    </div>`).join('');
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/';return;}
+  const {data:{user}}=await sb.auth.getUser();
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(!p||!['instructor','admin'].includes(p.role)){window.location.href='/';return;}
+  profile=p;
+  document.getElementById('tb-name').textContent=p.name;
+  await Promise.all([loadUnlocks(),loadStudents(),loadProgress(),loadUploads()]);
+  renderSidebar();renderMain();
+  // Poll for new uploads every 30s
+  setInterval(async()=>{await loadUploads();updateUploadBadge();},30000);
+})();
+
+async function loadUnlocks(){const {data}=await sb.from('day_unlocks').select('*');if(data)data.forEach(r=>dayUnlocks[r.day_number]=r.is_unlocked);}
+async function loadStudents(){const {data}=await sb.from('profiles').select('*').eq('role','student').order('name');if(data)students=data;}
+async function loadProgress(){const {data}=await sb.from('student_progress').select('*');if(data)data.forEach(r=>{if(!progress[r.student_id])progress[r.student_id]={};progress[r.student_id][r.day]=r;});}
+async function loadUploads(){const {data}=await sb.from('game_uploads').select('*').order('uploaded_at',{ascending:false});if(data)uploads=data;}
+
+function updateUploadBadge(){
+  const unseen=uploads.filter(u=>!u.viewed).length;
+  const badge=document.getElementById('upload-badge');
+  if(badge)badge.textContent=unseen>0?unseen:'';
 }
 
-function setDay(n){activeDay=n;renderNav();renderMain();}
+async function doLogout(){await sb.auth.signOut();window.location.href='/';}
 
-// ── MAIN ─────────────────────────────────────────────────────────────────────
+function renderSidebar(){
+  document.getElementById('sidebar').innerHTML=`
+    <div class="sb-section">10-Day Program</div>
+    ${DAYS.map(d=>`
+      <div class="day-item ${d.day===activeDay?'active':''}" onclick="setDay(${d.day})">
+        <div class="di-icon" style="background:${d.colour}22;color:${d.colour}">${d.emoji}</div>
+        <div><div class="di-title">Day ${d.day}: ${d.genre}</div></div>
+      </div>`).join('')}`;
+}
+
+function setDay(n){activeDay=n;renderSidebar();renderMain();}
+
 function renderMain(){
   const d=DAYS[activeDay-1];
-  const panel=document.getElementById('main-panel');
-
   const timingHTML=d.timing.map(t=>`
     <div class="time-card">
       <div class="tc-time">${t.time}</div>
       <div class="tc-label">${t.label}</div>
       <div class="tc-desc">${t.desc}</div>
     </div>`).join('');
-
   const tipHTML=d.voiceTips.map(t=>`
-    <div class="tip-item">
-      <strong>${t.label}</strong>
-      ${t.tip}
-    </div>`).join('');
-
-  const bp=broadcastText?`<div class="bp-content">"${broadcastText}"</div>`
+    <div class="tip-item"><strong>${t.label}</strong>${t.tip}</div>`).join('');
+  const bp=broadcastText
+    ?`<div class="bp-content">"${broadcastText}"</div>`
     :`<div class="bp-content empty">Click any prompt's 📡 Broadcast button to load it here</div>`;
+  const unseen=uploads.filter(u=>!u.viewed).length;
 
-  panel.innerHTML=`
+  document.getElementById('main-panel').innerHTML=`
     <div class="day-hero" style="background:linear-gradient(135deg,${d.colour},${d.colour}bb)">
       <div class="dh-badge">Day ${d.day} of 10 — Instructor View</div>
       <div class="dh-title">${d.emoji} ${d.genre}</div>
       <div class="dh-sub">Grade 4 &amp; 5 — Claude-Powered Game Building</div>
-      <div class="dh-objective">
-        <strong>Today's Objective</strong>
-        ${d.objective}
+      <div class="dh-obj"><strong>Today's Objective</strong>${d.objective}</div>
+    </div>
+
+    <!-- DAY UNLOCK CONTROLS -->
+    <div class="unlock-panel">
+      <h3>🔐 Day Unlock Controls <span style="font-size:.68rem;font-weight:600;color:var(--muted)">— toggle to open days for students</span></h3>
+      <div class="unlock-grid">
+        ${DAYS.map(dd=>`
+          <div class="unlock-day">
+            <div class="unlock-day-label">Day ${dd.day}</div>
+            <label class="toggle">
+              <input type="checkbox" id="unlock-${dd.day}" ${dayUnlocks[dd.day]?'checked':''} onchange="toggleDay(${dd.day},this.checked)">
+              <span class="slider"></span>
+            </label>
+          </div>`).join('')}
       </div>
     </div>
 
+    <!-- STUDENT PROGRESS GRID -->
+    <div class="progress-panel">
+      <div class="progress-panel-header">📊 Student Progress <span style="color:var(--muted);font-size:.68rem;font-weight:600">${students.length} students</span></div>
+      <div class="progress-table-wrap">
+        <table class="progress-table">
+          <thead><tr>
+            <th class="name-col">Student</th>
+            ${Array.from({length:10},(_,i)=>`<th>D${i+1}</th>`).join('')}
+          </tr></thead>
+          <tbody>
+            ${students.length===0?`<tr><td colspan="11" style="text-align:center;padding:1.2rem;color:var(--muted);font-size:.8rem">No students have signed up yet.</td></tr>`:
+            students.map(s=>{
+              const sp=progress[s.id]||{};
+              const cells=Array.from({length:10},(_,i)=>{
+                const day=i+1,pr=sp[day];
+                if(pr?.completed) return `<td class="cell-done" title="Day ${day} complete">✅</td>`;
+                if(pr?.prompts_used>0) return `<td class="cell-active" title="${pr.prompts_used} prompts used">🟡</td>`;
+                return `<td class="cell-empty">·</td>`;
+              }).join('');
+              return `<tr class="student-row-expand" onclick="toggleStudentDetail('${s.id}')">
+                <td class="name-cell">👤 ${s.name} <span style="color:var(--muted);font-size:.62rem">Gr.${s.grade||'?'}</span></td>
+                ${cells}
+              </tr>
+              <tr class="student-detail" id="detail-${s.id}">
+                <td colspan="11">
+                  <div class="detail-inner">
+                    ${Array.from({length:10},(_,i)=>{
+                      const day=i+1,pr=sp[day];
+                      if(!pr) return '';
+                      return `📅 Day ${day}: ${pr.completed?'✅ Complete':'🟡 In Progress'} · ${pr.prompts_used||0} prompt${pr.prompts_used!==1?'s':''} used`;
+                    }).filter(Boolean).join(' &nbsp;|&nbsp; ')||'No activity yet.'}
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- UPLOADS -->
+    <div class="uploads-panel">
+      <div class="uploads-header">
+        📤 Student Game Uploads
+        <span class="notif-badge" id="upload-badge">${unseen>0?unseen:''}</span>
+        <span style="margin-left:auto;font-size:.66rem;font-weight:600;color:var(--muted)">${uploads.length} total</span>
+      </div>
+      ${uploads.length===0?'<div class="empty-uploads">No games uploaded yet. Students upload their HTML files from the student view.</div>':
+      uploads.slice(0,20).map(u=>`
+        <div class="upload-item ${!u.viewed?'new':''}">
+          <span class="ui-emoji">🎮</span>
+          <div class="ui-info">
+            <div class="ui-name">${u.student_name||'Student'} — Day ${u.day} — ${u.file_name}</div>
+            <div class="ui-meta">${new Date(u.uploaded_at).toLocaleString()}${!u.viewed?' · 🆕 New':''}</div>
+          </div>
+          <div class="ui-actions">
+            <button class="ui-btn ui-preview" onclick="previewUpload('${u.id}','${u.storage_path}','${(u.student_name||'Student').replace(/'/g,'')}: ${u.file_name}')">👁 Preview</button>
+            <button class="ui-btn ui-download" onclick="downloadUpload('${u.storage_path}','${u.file_name}')">⬇</button>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <!-- BROADCAST -->
     <div class="broadcast-panel">
-      <div class="bp-title">📡 Broadcast to Class — Read this out loud or share your screen</div>
+      <div class="bp-title">📡 Broadcast to Class — Read aloud or share your screen</div>
       ${bp}
       <div class="bp-row">
         <button class="bp-copy" onclick="copyBroadcast()">📋 Copy Prompt</button>
@@ -546,38 +337,33 @@ function renderMain(){
       </div>
     </div>
 
-    <div class="section-title">⏱️ Session Timing Guide</div>
+    <div class="sec-title">⏱️ Session Timing</div>
     <div class="timing-grid">${timingHTML}</div>
 
-    <div class="voice-tips" style="margin-top:.8rem">
+    <div class="voice-tips" style="margin-top:.7rem">
       <div class="vt-title">🎤 Voice Prompt Tips for Today</div>
       <div class="tip-list">${tipHTML}</div>
     </div>
 
-    <div class="section-title">🚀 Starter Prompts <span class="stag stag-blue">For students with no game yet</span></div>
-    <div class="prompt-grid">${renderPromptCards(d.starters,'start',d.colour)}</div>
+    <div class="sec-title">🚀 Starter Prompts <span class="stag stag-blue">No game yet</span></div>
+    <div class="prompt-grid">${renderPrompts(d.starters,'start')}</div>
 
-    <div class="section-title">⬆️ Upgrade Prompts <span class="stag stag-green">When game is working, make it better</span></div>
-    <div class="prompt-grid">${renderPromptCards(d.upgrades,'up',d.colour)}</div>
+    <div class="sec-title">⬆️ Upgrade Prompts <span class="stag stag-green">Game is working</span></div>
+    <div class="prompt-grid">${renderPrompts(d.upgrades,'up')}</div>
 
-    <div class="section-title">🔧 Fix It Prompts <span class="stag stag-red">When something breaks</span></div>
-    <div class="prompt-grid">${renderPromptCards(d.fixes,'fix',d.colour)}</div>
+    <div class="sec-title">🔧 Fix It Prompts <span class="stag stag-red">Something broke</span></div>
+    <div class="prompt-grid">${renderPrompts(d.fixes,'fix')}</div>
 
-    <div style="height:2rem"></div>
-  `;
+    <div style="height:2rem"></div>`;
 }
 
-function renderPromptCards(prompts,type,colour){
-  const typeLabel={start:'Starter',up:'Upgrade',fix:'Fix It'};
-  const tagClass={start:'stag-blue',up:'stag-green',fix:'stag-red'};
-  return prompts.map((p,i)=>`
+function renderPrompts(arr,type){
+  const labels={start:'Starter',up:'Upgrade',fix:'Fix It'};
+  const tags={start:'stag-blue',up:'stag-green',fix:'stag-red'};
+  return arr.map((p,i)=>`
     <div class="instr-prompt" id="ip-${type}-${i}">
-      <div class="ip-label">
-        <span style="font-size:1rem">${p.e}</span>
-        <span class="stag ${tagClass[type]}">${typeLabel[type]}</span>
-        ${p.label}
-      </div>
-      <div class="ip-text">${highlightFills(p.t)}</div>
+      <div class="ip-label"><span>${p.e}</span><span class="stag ${tags[type]}">${labels[type]}</span>${p.label}</div>
+      <div class="ip-text">${hl(p.t)}</div>
       <div class="ip-actions">
         <button class="ip-copy" onclick="copyIP('${type}',${i})">📋 Copy</button>
         <button class="ip-broadcast" onclick="broadcastIP('${type}',${i})">📡 Broadcast</button>
@@ -586,58 +372,63 @@ function renderPromptCards(prompts,type,colour){
     </div>`).join('');
 }
 
-function highlightFills(text){
-  return text.replace(/\[([^\]]+)\]/g,'<span class="fill">[$1]</span>');
+function hl(t){return t.replace(/\[([^\]]+)\]/g,'<span class="fill">[$1]</span>');}
+
+function toggleStudentDetail(id){
+  const el=document.getElementById('detail-'+id);
+  if(el)el.style.display=el.style.display==='table-row'?'none':'table-row';
+}
+
+async function toggleDay(day,val){
+  dayUnlocks[day]=val;
+  await sb.from('day_unlocks').update({is_unlocked:val,unlocked_by:profile.id,unlocked_at:new Date().toISOString()}).eq('day_number',day);
+  showToast(val?`🔓 Day ${day} unlocked for students!`:`🔒 Day ${day} locked.`);
+}
+
+async function previewUpload(id,path,title){
+  const {data,error}=await sb.storage.from('game-uploads').createSignedUrl(path,3600);
+  if(error){showToast('❌ Could not load preview: '+error.message);return;}
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-frame').src=data.signedUrl;
+  document.getElementById('modal-dl-link').href=data.signedUrl;
+  document.getElementById('modal-bg').classList.add('open');
+  // Mark as viewed
+  await sb.from('game_uploads').update({viewed:true}).eq('id',id);
+  const u=uploads.find(u=>u.id===id);if(u)u.viewed=true;
+  updateUploadBadge();
+}
+
+async function downloadUpload(path,filename){
+  const {data,error}=await sb.storage.from('game-uploads').createSignedUrl(path,60);
+  if(error){showToast('❌ '+error.message);return;}
+  const a=document.createElement('a');a.href=data.signedUrl;a.download=filename;a.click();
+}
+
+function closeModal(e){if(e.target===document.getElementById('modal-bg'))closeModalDirect();}
+function closeModalDirect(){
+  document.getElementById('modal-bg').classList.remove('open');
+  document.getElementById('modal-frame').src='';
 }
 
 function copyIP(type,idx){
-  const d=DAYS[activeDay-1];
-  const arr=type==='start'?d.starters:type==='up'?d.upgrades:d.fixes;
-  const text=arr[idx].t;
-  copyToClipboard(text);
+  const d=DAYS[activeDay-1],arr=type==='start'?d.starters:type==='up'?d.upgrades:d.fixes;
+  clip(arr[idx].t);
   const el=document.getElementById('ip-'+type+'-'+idx);
   if(el){el.classList.add('flashed');setTimeout(()=>el.classList.remove('flashed'),2000);}
-  showToast('📋 Copied! Share with students.');
+  showToast('📋 Copied!');
 }
-
 function broadcastIP(type,idx){
-  const d=DAYS[activeDay-1];
-  const arr=type==='start'?d.starters:type==='up'?d.upgrades:d.fixes;
-  broadcastText=arr[idx].t;
-  renderMain();
+  const d=DAYS[activeDay-1],arr=type==='start'?d.starters:type==='up'?d.upgrades:d.fixes;
+  broadcastText=arr[idx].t;renderMain();
   window.scrollTo({top:0,behavior:'smooth'});
-  showToast('📡 Loaded in broadcast panel — read aloud or share your screen!');
+  showToast('📡 Loaded in broadcast panel!');
 }
-
-function copyBroadcast(){
-  if(!broadcastText){showToast('Select a prompt to broadcast first');return;}
-  copyToClipboard(broadcastText);
-  showToast('📋 Broadcast prompt copied!');
-}
-
+function copyBroadcast(){if(!broadcastText){showToast('Select a prompt first');return;}clip(broadcastText);showToast('📋 Copied!');}
 function clearBroadcast(){broadcastText='';renderMain();}
 
-function copyToClipboard(text){
-  if(navigator.clipboard){navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));}
-  else fallbackCopy(text);
-}
-function fallbackCopy(text){
-  const ta=document.createElement('textarea');
-  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
-  document.body.appendChild(ta);ta.select();
-  try{document.execCommand('copy');}catch(e){}
-  document.body.removeChild(ta);
-}
-
-function showToast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
-
-// ── INIT ──────────────────────────────────────────────────────────────────────
-renderNav();
-renderMain();
+function clip(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>fb(t));else fb(t);}
+function fb(t){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 </script>
 </body>
 </html>

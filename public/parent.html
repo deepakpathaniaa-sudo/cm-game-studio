@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parent View — Concept Mastery Game Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--bg:#f0f4ff;--card:#fff;--border:#dde4f5;--text:#1a1a2e;--muted:#6b7280;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--red:#C0392B;--radius:14px}
+html,body{min-height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
+.topbar{background:var(--blue);padding:.7rem 1.4rem;display:flex;align-items:center;gap:.85rem;box-shadow:0 2px 16px rgba(26,94,171,.35)}
+.topbar-logo{font-family:var(--display);color:#fff;font-size:1.1rem}
+.topbar-logo span{color:var(--gold)}
+.role-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:.7rem}
+.topbar-name{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:700}
+.logout-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.68rem;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:var(--font)}
+.page{max-width:900px;margin:0 auto;padding:1.5rem 1rem}
+.hero{background:linear-gradient(135deg,var(--blue),#2d5fa0);border-radius:var(--radius);padding:1.4rem 1.6rem;color:#fff;margin-bottom:1.4rem}
+.hero h1{font-family:var(--display);font-size:1.6rem;margin-bottom:.25rem}
+.hero p{font-size:.82rem;opacity:.85}
+.section-title{font-size:.78rem;font-weight:800;color:var(--text);margin:.9rem 0 .5rem;display:flex;align-items:center;gap:.5rem}
+.no-child{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:2rem;text-align:center;color:var(--muted);font-size:.85rem}
+/* child card */
+.child-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.2rem}
+.child-header{background:linear-gradient(135deg,#1a1a2e,#2d3561);padding:1rem 1.2rem;color:#fff;display:flex;align-items:center;gap:.85rem}
+.child-avatar{width:48px;height:48px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:1.4rem;flex-shrink:0}
+.child-name{font-family:var(--display);font-size:1.25rem}
+.child-grade{font-size:.72rem;color:rgba(255,255,255,.65);margin-top:.1rem}
+.child-xp{margin-left:auto;text-align:right}
+.xp-val{font-family:var(--display);font-size:1.4rem;color:var(--gold)}
+.xp-label{font-size:.6rem;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.5px}
+/* progress strip */
+.progress-strip{padding:1rem 1.2rem;border-bottom:1px solid var(--border)}
+.ps-title{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem}
+.days-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:.35rem}
+.day-cell{border-radius:8px;padding:.5rem .2rem;text-align:center;border:1.5px solid var(--border);background:var(--bg)}
+.day-cell.complete{background:#e9f8ed;border-color:#2D8A3E}
+.day-cell.active{background:#fff8e8;border-color:var(--gold)}
+.day-cell.locked{opacity:.4}
+.dc-num{font-size:.6rem;font-weight:800;color:var(--muted)}
+.dc-icon{font-size:1rem;display:block;margin:.15rem 0}
+.dc-label{font-size:.55rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* stats */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem;padding:1rem 1.2rem;border-bottom:1px solid var(--border)}
+.stat-box{background:var(--bg);border-radius:10px;padding:.65rem .5rem;text-align:center}
+.stat-val{font-family:var(--display);font-size:1.4rem;color:var(--blue)}
+.stat-lbl{font-size:.6rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+/* uploads */
+.uploads-section{padding:1rem 1.2rem}
+.upload-list{display:flex;flex-direction:column;gap:.5rem}
+.upload-item{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:.7rem .9rem;display:flex;align-items:center;gap:.7rem}
+.ui-info{flex:1}
+.ui-name{font-size:.8rem;font-weight:800}
+.ui-meta{font-size:.65rem;color:var(--muted)}
+.ui-btn{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:.35rem .8rem;font-size:.68rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.empty{font-size:.78rem;color:var(--muted);text-align:center;padding:.8rem}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:var(--radius);width:100%;max-width:860px;height:78vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-top{padding:.7rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem}
+.modal-title{font-size:.82rem;font-weight:800;flex:1}
+.modal-close{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.35rem .75rem;font-size:.72rem;font-weight:800;cursor:pointer;font-family:var(--font)}
+.modal-frame{flex:1;border:none;width:100%}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-logo">🎮 Game <span>Studio</span></div>
+  <span class="role-badge">👨‍👩‍👧 Parent</span>
+  <div class="topbar-right">
+    <span class="topbar-name" id="tb-name"></span>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="page" id="page">
+  <div style="padding:3rem;text-align:center;color:var(--muted)">Loading…</div>
+</div>
+
+<div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-top">
+      <span class="modal-title" id="modal-title">Game Preview</span>
+      <button class="modal-close" onclick="closeModal()">✕ Close</button>
+    </div>
+    <iframe class="modal-frame" id="modal-frame" sandbox="allow-scripts allow-same-origin"></iframe>
+  </div>
+</div>
+
+<script>
+const SURL='https://xoxjcpbruryjcqonzwag.supabase.co';
+const SKEY='sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
+const sb=window.supabase.createClient(SURL,SKEY);
+
+const DAY_GENRES=['Quiz','Maze','Story','Catch','Memory','Platform','Drawing','Pet','Word','My Game'];
+
+let profile=null,children=[],uploads={};
+
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/';return;}
+  const {data:{user}}=await sb.auth.getUser();
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(!p||p.role!=='parent'){window.location.href='/';return;}
+  profile=p;
+  document.getElementById('tb-name').textContent=p.name;
+  await loadChildren();
+  render();
+})();
+
+async function loadChildren(){
+  // Get linked students
+  const {data:links}=await sb.from('parent_student').select('student_id').eq('parent_id',profile.id);
+  if(!links||links.length===0){children=[];return;}
+  const ids=links.map(l=>l.student_id);
+  const {data:students}=await sb.from('profiles').select('*').in('id',ids);
+  if(!students){children=[];return;}
+  // Load progress and uploads for each child
+  for(const s of students){
+    const [{data:prog},{data:ups}]=await Promise.all([
+      sb.from('student_progress').select('*').eq('student_id',s.id),
+      sb.from('game_uploads').select('*').eq('student_id',s.id).order('uploaded_at',{ascending:false})
+    ]);
+    s.progress={};(prog||[]).forEach(r=>{s.progress[r.day]=r;});
+    s.uploads=ups||[];
+  }
+  children=students;
+}
+
+function render(){
+  const page=document.getElementById('page');
+  if(children.length===0){
+    page.innerHTML=`
+      <div class="hero"><h1>👋 Welcome, ${profile.name}!</h1><p>Your parent account is set up. You'll see your child's progress once an administrator links their account to yours.</p></div>
+      <div class="no-child">👨‍👩‍👧 No student accounts are linked to your parent account yet.<br><br>Please contact your child's instructor or program administrator to link your accounts.</div>`;
+    return;
+  }
+  let html=`<div class="hero"><h1>👋 Welcome, ${profile.name}!</h1><p>Here's how your ${children.length===1?'child is':'children are'} doing in the Game Studio program.</p></div>`;
+  for(const s of children) html+=renderChild(s);
+  page.innerHTML=html;
+}
+
+function renderChild(s){
+  const daysComplete=Object.values(s.progress).filter(r=>r.completed).length;
+  const daysActive=Object.values(s.progress).filter(r=>!r.completed&&r.prompts_used>0).length;
+  const totalPrompts=Object.values(s.progress).reduce((a,r)=>a+(r.prompts_used||0),0);
+  const totalXP=Object.values(s.progress).reduce((a,r)=>a+(r.xp||0),0);
+
+  const daysGrid=Array.from({length:10},(_,i)=>{
+    const day=i+1,pr=s.progress[day];
+    const cls=pr?.completed?'complete':pr?.prompts_used>0?'active':'locked';
+    const icon=pr?.completed?'✅':pr?.prompts_used>0?'🟡':'⬜';
+    return `<div class="day-cell ${cls}">
+      <div class="dc-num">D${day}</div>
+      <span class="dc-icon">${icon}</span>
+      <div class="dc-label">${DAY_GENRES[i]}</div>
+    </div>`;
+  }).join('');
+
+  const uploadList=s.uploads.slice(0,6).map(u=>`
+    <div class="upload-item">
+      <span style="font-size:1.2rem">🎮</span>
+      <div class="ui-info">
+        <div class="ui-name">Day ${u.day} — ${u.file_name}</div>
+        <div class="ui-meta">${new Date(u.uploaded_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</div>
+      </div>
+      <button class="ui-btn" onclick="previewUpload('${u.storage_path}','Day ${u.day} Game')">👁 View</button>
+    </div>`).join('');
+
+  const initials=s.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  return `
+    <div class="child-card">
+      <div class="child-header">
+        <div class="child-avatar">${initials}</div>
+        <div>
+          <div class="child-name">${s.name}</div>
+          <div class="child-grade">Grade ${s.grade||'?'} · Game Studio Student</div>
+        </div>
+        <div class="child-xp">
+          <div class="xp-val">⭐ ${totalXP}</div>
+          <div class="xp-label">Total XP</div>
+        </div>
+      </div>
+      <div class="progress-strip">
+        <div class="ps-title">10-Day Progress</div>
+        <div class="days-grid">${daysGrid}</div>
+        <div style="display:flex;gap:1rem;margin-top:.6rem;font-size:.68rem;color:var(--muted);flex-wrap:wrap">
+          <span>✅ Complete</span><span>🟡 In Progress</span><span>⬜ Not Started</span>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box"><div class="stat-val">${daysComplete}</div><div class="stat-lbl">Days Done</div></div>
+        <div class="stat-box"><div class="stat-val">${daysActive}</div><div class="stat-lbl">In Progress</div></div>
+        <div class="stat-box"><div class="stat-val">${totalPrompts}</div><div class="stat-lbl">Prompts Used</div></div>
+        <div class="stat-box"><div class="stat-val">${s.uploads.length}</div><div class="stat-lbl">Games Built</div></div>
+      </div>
+      <div class="uploads-section">
+        <div class="section-title" style="margin-top:0">🎮 Games ${s.name.split(' ')[0]} Built</div>
+        ${s.uploads.length===0
+          ? '<div class="empty">No games uploaded yet.</div>'
+          : `<div class="upload-list">${uploadList}</div>`}
+      </div>
+    </div>`;
+}
+
+async function previewUpload(path,title){
+  const {data,error}=await sb.storage.from('game-uploads').createSignedUrl(path,3600);
+  if(error){alert('Could not load preview: '+error.message);return;}
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-frame').src=data.signedUrl;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-bg').classList.remove('open');
+  document.getElementById('modal-frame').src='';
+}
+async function doLogout(){await sb.auth.signOut();window.location.href='/';}
+</script>
+</body>
+</html>

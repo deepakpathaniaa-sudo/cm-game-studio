@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Concept Mastery Game Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--bg:#f0f4ff;--card:#fff;--border:#dde4f5;--text:#1a1a2e;--muted:#6b7280;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--red:#C0392B;--radius:14px}
+html,body{min-height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
+.topbar{background:#0f1d3a;padding:.7rem 1.4rem;display:flex;align-items:center;gap:.85rem;box-shadow:0 2px 16px rgba(0,0,0,.4)}
+.topbar-logo{font-family:var(--display);color:#fff;font-size:1.1rem}
+.topbar-logo span{color:var(--gold)}
+.role-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:.7rem}
+.topbar-name{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:700}
+.logout-btn{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:.68rem;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:var(--font)}
+.page{max-width:1000px;margin:0 auto;padding:1.5rem 1rem}
+.page-title{font-family:var(--display);font-size:1.5rem;margin-bottom:1.2rem}
+.tabs{display:flex;gap:.4rem;margin-bottom:1.2rem;border-bottom:2px solid var(--border);padding-bottom:0}
+.tab{padding:.55rem 1.1rem;border:none;background:transparent;font-family:var(--font);font-size:.82rem;font-weight:800;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+/* Cards */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden}
+.card-header{padding:.8rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+.card-body{padding:1rem}
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media(max-width:600px){.form-grid{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:.25rem}
+label.fl{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+input.fi,select.fi{padding:.65rem .85rem;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem;font-weight:600;background:#fff;color:var(--text);outline:none;width:100%}
+input.fi:focus,select.fi:focus{border-color:var(--blue)}
+.btn{padding:.6rem 1.2rem;border-radius:10px;border:none;font-family:var(--font);font-size:.8rem;font-weight:800;cursor:pointer}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:.35rem .75rem;font-size:.7rem}
+.form-error{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);color:var(--red);border-radius:8px;padding:.5rem .75rem;font-size:.75rem;font-weight:700;display:none}
+.form-error.show{display:block}
+.form-success{background:rgba(45,138,62,.1);border:1px solid rgba(45,138,62,.3);color:var(--green);border-radius:8px;padding:.5rem .75rem;font-size:.75rem;font-weight:700;display:none}
+.form-success.show{display:block}
+/* User list */
+.user-table{width:100%;border-collapse:collapse;font-size:.76rem}
+.user-table th{text-align:left;padding:.5rem .65rem;font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:1px solid var(--border)}
+.user-table td{padding:.55rem .65rem;border-bottom:1px solid #f5f7ff;vertical-align:middle}
+.user-table tr:hover td{background:var(--bg)}
+.role-chip{display:inline-block;padding:2px 9px;border-radius:20px;font-size:.62rem;font-weight:800;text-transform:uppercase}
+.rc-student{background:#e8f4fd;color:var(--blue)}
+.rc-instructor{background:#e8f8ed;color:var(--green)}
+.rc-parent{background:#fff8e0;color:#a06800}
+.rc-admin{background:#f8e8e8;color:var(--red)}
+/* Link panel */
+.link-row{display:grid;grid-template-columns:1fr auto 1fr auto;gap:.5rem;align-items:end;margin-bottom:.6rem}
+@media(max-width:600px){.link-row{grid-template-columns:1fr}}
+.link-arrow{font-size:1rem;text-align:center;padding-bottom:.4rem}
+.link-list{display:flex;flex-direction:column;gap:.4rem;margin-top:.6rem}
+.link-item{background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:.55rem .8rem;display:flex;align-items:center;justify-content:space-between;font-size:.76rem}
+.link-names{font-weight:700}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#0f2d5a;color:#fff;border-radius:20px;padding:.7rem 1.3rem;font-size:.82rem;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.4,.64,1);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-logo">🎮 Game <span>Studio</span></div>
+  <span class="role-badge">🛡️ Admin</span>
+  <div class="topbar-right">
+    <span class="topbar-name" id="tb-name"></span>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+<div class="page">
+  <div class="page-title">🛡️ Admin Dashboard</div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('users')">👥 All Users</button>
+    <button class="tab" onclick="showTab('create')">➕ Create Account</button>
+    <button class="tab" onclick="showTab('link')">🔗 Link Parent → Student</button>
+  </div>
+
+  <!-- ALL USERS -->
+  <div class="tab-panel active" id="tab-users">
+    <div class="card">
+      <div class="card-header">👥 All Accounts <span id="user-count" style="font-size:.68rem;color:var(--muted);font-weight:600"></span></div>
+      <div style="overflow-x:auto;padding:.25rem 0">
+        <table class="user-table" id="user-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Grade</th><th>Joined</th><th></th></tr></thead>
+          <tbody id="user-tbody"><tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--muted)">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE ACCOUNT -->
+  <div class="tab-panel" id="tab-create">
+    <div class="card">
+      <div class="card-header">➕ Create Instructor or Admin Account</div>
+      <div class="card-body">
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Students and parents self-register. Use this form to create instructor or admin accounts.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="fl">Full Name</label>
+            <input class="fi" type="text" id="c-name" placeholder="Jane Smith" maxlength="40">
+          </div>
+          <div class="form-group">
+            <label class="fl">Email</label>
+            <input class="fi" type="email" id="c-email" placeholder="jane@school.edu">
+          </div>
+          <div class="form-group">
+            <label class="fl">Temporary Password</label>
+            <input class="fi" type="password" id="c-pass" placeholder="At least 6 characters" minlength="6">
+          </div>
+          <div class="form-group">
+            <label class="fl">Role</label>
+            <select class="fi" id="c-role">
+              <option value="instructor">Instructor</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:.85rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
+          <button class="btn btn-blue" onclick="createAccount()">✨ Create Account</button>
+          <div class="form-error" id="c-error"></div>
+          <div class="form-success" id="c-success"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINK PARENT / STUDENT -->
+  <div class="tab-panel" id="tab-link">
+    <div class="card">
+      <div class="card-header">🔗 Link a Parent to a Student</div>
+      <div class="card-body">
+        <p style="font-size:.78rem;color:var(--muted);margin-bottom:.85rem">Once linked, the parent can see that student's progress in their parent dashboard.</p>
+        <div class="link-row">
+          <div class="form-group">
+            <label class="fl">Parent Account</label>
+            <select class="fi" id="link-parent"><option value="">Select parent…</option></select>
+          </div>
+          <div class="link-arrow">→</div>
+          <div class="form-group">
+            <label class="fl">Student Account</label>
+            <select class="fi" id="link-student"><option value="">Select student…</option></select>
+          </div>
+          <button class="btn btn-green" style="height:38px;align-self:end" onclick="addLink()">Link</button>
+        </div>
+        <div class="form-error" id="l-error"></div>
+        <div class="form-success" id="l-success"></div>
+        <div style="margin-top:1rem">
+          <div style="font-size:.72rem;font-weight:800;color:var(--muted);margin-bottom:.5rem">EXISTING LINKS</div>
+          <div class="link-list" id="link-list"><div style="font-size:.78rem;color:var(--muted)">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SURL='https://xoxjcpbruryjcqonzwag.supabase.co';
+const SKEY='sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
+const sb=window.supabase.createClient(SURL,SKEY);
+
+let profile=null,allUsers=[];
+
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/';return;}
+  const {data:{user}}=await sb.auth.getUser();
+  const {data:p}=await sb.from('profiles').select('*').eq('id',user.id).single();
+  if(!p||p.role!=='admin'){window.location.href='/';return;}
+  profile=p;
+  document.getElementById('tb-name').textContent=p.name;
+  await loadUsers();
+  await loadLinks();
+})();
+
+async function loadUsers(){
+  const {data}=await sb.from('profiles').select('*').order('created_at',{ascending:false});
+  allUsers=data||[];
+  document.getElementById('user-count').textContent=`— ${allUsers.length} accounts`;
+  renderUserTable();
+  populateSelects();
+}
+
+function renderUserTable(){
+  const roleClass={student:'rc-student',instructor:'rc-instructor',parent:'rc-parent',admin:'rc-admin'};
+  document.getElementById('user-tbody').innerHTML=allUsers.map(u=>`
+    <tr>
+      <td style="font-weight:800">${u.name}</td>
+      <td style="color:var(--muted)">${u.email||'—'}</td>
+      <td><span class="role-chip ${roleClass[u.role]||''}">${u.role}</span></td>
+      <td>${u.grade||'—'}</td>
+      <td style="color:var(--muted)">${new Date(u.created_at).toLocaleDateString()}</td>
+      <td><button class="btn btn-red btn-sm" onclick="deleteUser('${u.id}','${u.name.replace(/'/g,'')}')">Remove</button></td>
+    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--muted)">No users yet.</td></tr>';
+}
+
+function populateSelects(){
+  const parents=allUsers.filter(u=>u.role==='parent');
+  const students=allUsers.filter(u=>u.role==='student');
+  document.getElementById('link-parent').innerHTML='<option value="">Select parent…</option>'+parents.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  document.getElementById('link-student').innerHTML='<option value="">Select student…</option>'+students.map(u=>`<option value="${u.id}">${u.name} (Gr.${u.grade||'?'})</option>`).join('');
+}
+
+async function loadLinks(){
+  const {data}=await sb.from('parent_student').select('parent_id,student_id');
+  if(!data||data.length===0){document.getElementById('link-list').innerHTML='<div style="font-size:.78rem;color:var(--muted)">No links yet.</div>';return;}
+  document.getElementById('link-list').innerHTML=data.map(l=>{
+    const par=allUsers.find(u=>u.id===l.parent_id);
+    const stu=allUsers.find(u=>u.id===l.student_id);
+    return `<div class="link-item">
+      <span class="link-names">👨‍👩‍👧 ${par?.name||'Unknown'} → 🎮 ${stu?.name||'Unknown'}</span>
+      <button class="btn btn-red btn-sm" onclick="removeLink('${l.parent_id}','${l.student_id}')">Remove</button>
+    </div>`;
+  }).join('');
+}
+
+async function createAccount(){
+  const name=document.getElementById('c-name').value.trim();
+  const email=document.getElementById('c-email').value.trim();
+  const pass=document.getElementById('c-pass').value;
+  const role=document.getElementById('c-role').value;
+  const err=document.getElementById('c-error');
+  const ok=document.getElementById('c-success');
+  err.classList.remove('show');ok.classList.remove('show');
+  if(!name||!email||!pass){err.textContent='Please fill in all fields.';err.classList.add('show');return;}
+  const {error}=await sb.auth.signUp({email,password:pass,options:{data:{name,role}}});
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  ok.textContent=`✅ Account created for ${name} (${role}). They can now log in.`;ok.classList.add('show');
+  document.getElementById('c-name').value='';
+  document.getElementById('c-email').value='';
+  document.getElementById('c-pass').value='';
+  await loadUsers();
+}
+
+async function addLink(){
+  const pid=document.getElementById('link-parent').value;
+  const sid=document.getElementById('link-student').value;
+  const err=document.getElementById('l-error');
+  const ok=document.getElementById('l-success');
+  err.classList.remove('show');ok.classList.remove('show');
+  if(!pid||!sid){err.textContent='Select both a parent and a student.';err.classList.add('show');return;}
+  const {error}=await sb.from('parent_student').upsert({parent_id:pid,student_id:sid});
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  ok.textContent='✅ Linked successfully!';ok.classList.add('show');
+  await loadLinks();showToast('🔗 Parent linked to student!');
+}
+
+async function removeLink(pid,sid){
+  if(!confirm('Remove this parent-student link?'))return;
+  await sb.from('parent_student').delete().eq('parent_id',pid).eq('student_id',sid);
+  await loadLinks();showToast('Link removed.');
+}
+
+async function deleteUser(id,name){
+  if(!confirm(`Remove ${name}'s account? This cannot be undone.`))return;
+  await sb.from('profiles').delete().eq('id',id);
+  await loadUsers();showToast(`🗑 ${name} removed.`);
+}
+
+function showTab(id){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['users','create','link'][i]===id));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+id));
+}
+
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+async function doLogout(){await sb.auth.signOut();window.location.href='/';}
+</script>
+</body>
+</html>

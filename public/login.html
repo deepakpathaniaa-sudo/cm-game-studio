@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Studio — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--red:#C0392B}
+html,body{height:100%;font-family:var(--font);background:linear-gradient(145deg,#060e22,#1a3a6e,#0a1628);display:flex;align-items:center;justify-content:center;padding:1rem}
+.card{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:2.2rem 2rem;width:100%;max-width:420px}
+.logo{text-align:center;margin-bottom:1.5rem}
+.logo-icon{font-size:3rem;display:block;animation:bob 3s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.logo h1{font-family:var(--display);color:#fff;font-size:2rem;margin-top:.3rem}
+.logo h1 span{color:var(--gold)}
+.tabs{display:flex;gap:.4rem;background:rgba(0,0,0,.25);border-radius:12px;padding:.3rem;margin-bottom:1.4rem}
+.tab{flex:1;padding:.55rem;border:none;border-radius:9px;font-family:var(--font);font-size:.85rem;font-weight:800;cursor:pointer;transition:all .2s;background:transparent;color:rgba(255,255,255,.5)}
+.tab.active{background:var(--blue);color:#fff}
+.form{display:none;flex-direction:column;gap:.75rem}
+.form.active{display:flex}
+label{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.55);margin-bottom:.15rem;display:block}
+input,select{width:100%;padding:.8rem 1rem;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:#fff;font-family:var(--font);font-size:.9rem;font-weight:600;outline:none;transition:border-color .2s}
+input::placeholder{color:rgba(255,255,255,.3)}
+input:focus,select:focus{border-color:var(--gold)}
+select option{background:#1a3a6e;color:#fff}
+.role-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.role-btn{padding:.6rem;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-family:var(--font);font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s;text-align:center}
+.role-btn.sel{border-color:var(--gold);background:rgba(232,160,32,.15);color:#fff}
+.grade-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.grade-btn{padding:.55rem;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-family:var(--font);font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s}
+.grade-btn.sel{border-color:var(--blue);background:rgba(26,94,171,.25);color:#fff}
+.submit-btn{width:100%;padding:.95rem;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),#f5c030);color:#1a1a2e;font-family:var(--display);font-size:1.1rem;cursor:pointer;transition:transform .15s;margin-top:.3rem}
+.submit-btn:hover{transform:translateY(-2px)}
+.submit-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
+.error{background:rgba(192,57,43,.2);border:1px solid rgba(192,57,43,.4);color:#ff8a7a;border-radius:8px;padding:.6rem .9rem;font-size:.8rem;font-weight:700;display:none}
+.error.show{display:block}
+.info-note{font-size:.72rem;color:rgba(255,255,255,.35);text-align:center;margin-top:.5rem;line-height:1.5}
+#grade-wrap{display:none}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <span class="logo-icon">🎮</span>
+    <h1>Game <span>Studio</span></h1>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('login')">Sign In</button>
+    <button class="tab" onclick="showTab('signup')">Create Account</button>
+  </div>
+
+  <!-- LOGIN -->
+  <form class="form active" id="login-form" onsubmit="doLogin(event)">
+    <div>
+      <label>Email</label>
+      <input type="email" id="l-email" placeholder="your@email.com" required>
+    </div>
+    <div>
+      <label>Password</label>
+      <input type="password" id="l-password" placeholder="••••••••" required>
+    </div>
+    <div class="error" id="l-error"></div>
+    <button class="submit-btn" type="submit" id="l-btn">🚀 Sign In</button>
+  </form>
+
+  <!-- SIGN UP -->
+  <form class="form" id="signup-form" onsubmit="doSignup(event)">
+    <div>
+      <label>Your Name</label>
+      <input type="text" id="s-name" placeholder="First name or nickname" maxlength="30" required>
+    </div>
+    <div>
+      <label>Email</label>
+      <input type="email" id="s-email" placeholder="your@email.com" required>
+    </div>
+    <div>
+      <label>Password</label>
+      <input type="password" id="s-password" placeholder="At least 6 characters" minlength="6" required>
+    </div>
+    <div>
+      <label>I am a…</label>
+      <div class="role-row">
+        <button type="button" class="role-btn sel" data-r="student" onclick="pickRole('student')">🎮 Student</button>
+        <button type="button" class="role-btn" data-r="parent" onclick="pickRole('parent')">👨‍👩‍👧 Parent</button>
+      </div>
+    </div>
+    <div id="grade-wrap">
+      <label>Grade</label>
+      <div class="grade-row">
+        <button type="button" class="grade-btn sel" data-g="4" onclick="pickGrade(4)">Grade 4</button>
+        <button type="button" class="grade-btn" data-g="5" onclick="pickGrade(5)">Grade 5</button>
+      </div>
+    </div>
+    <div class="error" id="s-error"></div>
+    <button class="submit-btn" type="submit" id="s-btn">✨ Create Account</button>
+    <p class="info-note">Instructor &amp; Admin accounts are created by your program administrator.</p>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://xoxjcpbruryjcqonzwag.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ROUTES = {student:'/student',instructor:'/instructor',parent:'/parent',admin:'/admin'};
+let selectedRole = 'student';
+let selectedGrade = 4;
+
+// Auto-redirect if already logged in
+(async()=>{
+  const {data:{session}} = await sb.auth.getSession();
+  if(session) await redirectByRole();
+})();
+
+async function redirectByRole(){
+  const {data:{user}} = await sb.auth.getUser();
+  if(!user) return;
+  const {data:p} = await sb.from('profiles').select('role').eq('id',user.id).single();
+  if(p) window.location.href = ROUTES[p.role]||'/student';
+}
+
+function showTab(t){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='login'?0:1)));
+  document.getElementById('login-form').classList.toggle('active',t==='login');
+  document.getElementById('signup-form').classList.toggle('active',t==='signup');
+}
+
+function pickRole(r){
+  selectedRole=r;
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.toggle('sel',b.dataset.r===r));
+  document.getElementById('grade-wrap').style.display = r==='student'?'block':'none';
+}
+
+function pickGrade(g){
+  selectedGrade=g;
+  document.querySelectorAll('.grade-btn').forEach(b=>b.classList.toggle('sel',+b.dataset.g===g));
+}
+
+// Show grade selector by default
+document.getElementById('grade-wrap').style.display='block';
+
+async function doLogin(e){
+  e.preventDefault();
+  const err = document.getElementById('l-error');
+  const btn = document.getElementById('l-btn');
+  err.classList.remove('show');
+  btn.disabled=true; btn.textContent='Signing in…';
+  const {error} = await sb.auth.signInWithPassword({
+    email: document.getElementById('l-email').value,
+    password: document.getElementById('l-password').value
+  });
+  btn.disabled=false; btn.textContent='🚀 Sign In';
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  await redirectByRole();
+}
+
+async function doSignup(e){
+  e.preventDefault();
+  const err = document.getElementById('s-error');
+  const btn = document.getElementById('s-btn');
+  err.classList.remove('show');
+  const name = document.getElementById('s-name').value.trim();
+  const email = document.getElementById('s-email').value;
+  const password = document.getElementById('s-password').value;
+  if(!name){err.textContent='Please enter your name.';err.classList.add('show');return;}
+  btn.disabled=true; btn.textContent='Creating account…';
+  const meta = {name, role:selectedRole, grade: selectedRole==='student'?selectedGrade:null};
+  const {error} = await sb.auth.signUp({email, password, options:{data:meta}});
+  btn.disabled=false; btn.textContent='✨ Create Account';
+  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  await redirectByRole();
+}
+</script>
+</body>
+</html>
