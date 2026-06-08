@@ -100,6 +100,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 </style>
 </head>
 <body>
+<div id="boot-error" style="display:none;position:fixed;inset:0;background:#f0f4ff;z-index:9999;align-items:center;justify-content:center;font-family:'Nunito',sans-serif"></div>
 <div class="topbar">
   <div class="topbar-logo">🎮 Game <span>Studio</span></div>
   <span style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.62rem;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px">🎮 Student</span>
@@ -160,7 +161,26 @@ const localLog=JSON.parse(localStorage.getItem('cm_log_v3')||'{}');
     if(data){p=data;break;}
     await new Promise(r=>setTimeout(r,600));
   }
-  if(!p||p.role!=='student'){window.location.href='/';return;}
+  // Break redirect loop — show error instead of bouncing back to login
+  if(!p){
+    document.getElementById('boot-error').style.display='flex';
+    document.getElementById('boot-error').innerHTML=`
+      <div style="text-align:center;padding:3rem 1.5rem">
+        <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+        <h2 style="font-family:'Fredoka One',cursive;font-size:1.5rem;margin-bottom:.5rem">Profile Not Found</h2>
+        <p style="color:#6b7280;font-size:.85rem;max-width:320px;margin:0 auto .75rem;line-height:1.6">
+          Your account exists but your profile hasn't been set up yet.<br>
+          This usually means the database schema hasn't been run in Supabase.
+        </p>
+        <p style="color:#6b7280;font-size:.78rem;margin-bottom:1.2rem">Logged in as: <strong>${user.email}</strong></p>
+        <button onclick="sb.auth.signOut().then(()=>window.location.href='/')"
+          style="background:#1A5EAB;color:#fff;border:none;border-radius:10px;padding:.65rem 1.4rem;font-size:.85rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">
+          Sign Out & Try Again
+        </button>
+      </div>`;
+    return;
+  }
+  if(p.role!=='student'){window.location.href='/';return;}
   profile=p;
   document.getElementById('tb-name').textContent=p.name;
   await Promise.all([loadUnlocks(),loadProgress(),loadUploads()]);

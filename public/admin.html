@@ -66,6 +66,7 @@ input.fi:focus,select.fi:focus{border-color:var(--blue)}
 </style>
 </head>
 <body>
+<div id="boot-error" style="display:none;position:fixed;inset:0;background:#f0f4ff;z-index:9999;align-items:center;justify-content:center;font-family:'Nunito',sans-serif"></div>
 <div class="topbar">
   <div class="topbar-logo">🎮 Game <span>Studio</span></div>
   <span class="role-badge">🛡️ Admin</span>
@@ -167,6 +168,21 @@ const SURL='https://xoxjcpbruryjcqonzwag.supabase.co';
 const SKEY='sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
 const sb=window.supabase.createClient(SURL,SKEY);
 
+function showBootError(email,msg){
+  const el=document.getElementById('boot-error');
+  el.style.display='flex';
+  el.innerHTML=`<div style="text-align:center;padding:3rem 1.5rem;max-width:380px">
+    <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+    <h2 style="font-family:'Fredoka One',cursive;font-size:1.4rem;margin-bottom:.5rem;color:#1a1a2e">Access Problem</h2>
+    <p style="color:#6b7280;font-size:.85rem;line-height:1.6;margin-bottom:.5rem">${msg}</p>
+    <p style="color:#6b7280;font-size:.75rem;margin-bottom:1.2rem">Account: <strong>${email||''}</strong></p>
+    <button onclick="sb.auth.signOut().then(()=>window.location.href='/')"
+      style="background:#1A5EAB;color:#fff;border:none;border-radius:10px;padding:.65rem 1.4rem;font-size:.85rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">
+      Sign Out
+    </button>
+  </div>`;
+}
+
 let profile=null,allUsers=[];
 
 (async()=>{
@@ -179,7 +195,8 @@ let profile=null,allUsers=[];
     if(data){p=data;break;}
     await new Promise(r=>setTimeout(r,600));
   }
-  if(!p||p.role!=='admin'){window.location.href='/';return;}
+  if(!p){showBootError(user.email,'Profile not found — schema may not be set up in Supabase.');return;}
+  if(p.role!=='admin'){showBootError(user.email,`Your role is "${p.role}". Admin role required for this page.`);return;}
   profile=p;
   document.getElementById('tb-name').textContent=p.name;
   await loadUsers();
