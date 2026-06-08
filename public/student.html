@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Game Studio — Concept Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font:'Nunito',sans-serif;
+  --display:'Fredoka One',cursive;
+  --bg:#f0f4ff;--card:#fff;--border:#dde4f5;
+  --text:#1a1a2e;--muted:#6b7280;
+  --blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;
+  --radius:16px;
+}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden}
+
+/* ── NAME SCREEN ─────────────────────────────────────── */
+#name-screen{
+  position:fixed;inset:0;z-index:300;
+  background:linear-gradient(145deg,#060e22,#1A5EAB,#0a1628);
+  display:flex;align-items:center;justify-content:center;padding:1.5rem;
+}
+.name-card{
+  background:rgba(255,255,255,.08);backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,.15);border-radius:28px;
+  padding:2.5rem 2rem;max-width:400px;width:100%;text-align:center;
+}
+.name-rocket{font-size:4rem;display:block;margin-bottom:.8rem;animation:bob 3s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(232,160,32,.6))}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-14px) rotate(6deg)}}
+.name-card h1{font-family:var(--display);color:#fff;font-size:2.2rem;margin-bottom:.3rem}
+.name-card p{color:rgba(255,255,255,.6);font-size:.9rem;margin-bottom:1.6rem}
+.name-input{width:100%;padding:.9rem 1rem;border-radius:12px;border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-family:var(--font);font-size:1.05rem;font-weight:700;text-align:center;outline:none;margin-bottom:.8rem;transition:border-color .2s}
+.name-input::placeholder{color:rgba(255,255,255,.35);font-weight:400}
+.name-input:focus{border-color:var(--gold)}
+.grade-row{display:flex;gap:.6rem;margin-bottom:.9rem}
+.grade-btn{flex:1;padding:.65rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.65);font-family:var(--font);font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s}
+.grade-btn.sel{background:var(--gold);border-color:var(--gold);color:#1a1a2e}
+.go-btn{width:100%;padding:1rem;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),#f5c030);color:#1a1a2e;font-family:var(--display);font-size:1.2rem;cursor:pointer;box-shadow:0 4px 20px rgba(232,160,32,.4);transition:transform .15s}
+.go-btn:hover{transform:translateY(-2px)}
+
+/* ── TOP BAR ─────────────────────────────────────────── */
+.topbar{background:var(--blue);padding:.65rem 1.2rem;display:flex;align-items:center;gap:.8rem;box-shadow:0 2px 16px rgba(26,94,171,.35);position:sticky;top:0;z-index:50}
+.topbar-logo{font-family:var(--display);color:#fff;font-size:1.05rem}
+.topbar-logo span{color:var(--gold)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:.6rem}
+.player-name{color:rgba(255,255,255,.9);font-size:.8rem;font-weight:800}
+.xp-wrap{display:flex;align-items:center;gap:.4rem}
+.xp-track{width:70px;height:8px;background:rgba(255,255,255,.2);border-radius:8px;overflow:hidden}
+.xp-fill{height:100%;background:var(--gold);border-radius:8px;transition:width .8s cubic-bezier(.34,1.56,.64,1)}
+.rank-tag{background:var(--gold);color:#1a1a2e;font-size:.62rem;font-weight:800;padding:2px 9px;border-radius:20px}
+
+/* ── DAY SELECTOR BAR ────────────────────────────────── */
+.day-bar{background:var(--card);border-bottom:1px solid var(--border);padding:.5rem .8rem;display:flex;gap:.4rem;overflow-x:auto;scrollbar-width:none}
+.day-bar::-webkit-scrollbar{display:none}
+.day-chip{flex-shrink:0;padding:.42rem .85rem;border-radius:30px;border:1.5px solid var(--border);background:var(--card);font-size:.75rem;font-weight:800;cursor:pointer;transition:all .2s;color:var(--muted);white-space:nowrap}
+.day-chip.active-day{color:#fff;border-color:transparent}
+.day-chip.done-day{border-color:var(--green)}
+.day-chip.done-day::after{content:' ✓'}
+
+/* ── MAIN LAYOUT ─────────────────────────────────────── */
+.main{padding:.9rem;max-width:600px;margin:0 auto}
+
+/* ── TODAY HERO CARD ─────────────────────────────────── */
+.hero-card{border-radius:var(--radius);padding:1.4rem 1.4rem 1.2rem;color:#fff;margin-bottom:.9rem;position:relative;overflow:hidden}
+.hero-card::before{content:'';position:absolute;inset:0;background:rgba(0,0,0,.15);border-radius:var(--radius)}
+.hero-badge{position:relative;display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.25);border-radius:20px;font-size:.62rem;font-weight:800;padding:3px 11px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+.hero-title{position:relative;font-family:var(--display);font-size:2rem;margin-bottom:.2rem;line-height:1.1}
+.hero-tagline{position:relative;font-size:.85rem;opacity:.8;margin-bottom:1rem}
+.hero-theme{position:relative;background:rgba(255,255,255,.12);border-radius:10px;padding:.7rem .9rem;font-size:.8rem;line-height:1.55}
+.hero-theme strong{display:block;font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;opacity:.7;margin-bottom:.2rem}
+.inspire-chips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem}
+.inspire-chip{background:rgba(255,255,255,.2);border-radius:20px;font-size:.75rem;padding:3px 10px;cursor:pointer;transition:background .2s;border:none;color:#fff;font-family:var(--font)}
+.inspire-chip:hover{background:rgba(255,255,255,.32)}
+
+/* ── PROMPT PANELS ───────────────────────────────────── */
+.panel-tabs{display:flex;gap:.4rem;margin-bottom:.75rem}
+.ptab{flex:1;padding:.65rem .5rem;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:.75rem;font-weight:800;cursor:pointer;transition:all .2s;text-align:center;color:var(--muted)}
+.ptab.active-ptab{color:#fff;border-color:transparent}
+.ptab-start.active-ptab{background:var(--blue)}
+.ptab-up.active-ptab{background:var(--green)}
+.ptab-fix.active-ptab{background:#C0392B}
+
+.prompt-panel{display:none}
+.prompt-panel.active-pp{display:flex;flex-direction:column;gap:.55rem}
+
+.prompt-label{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:.1rem}
+
+.prompt-card{background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:.85rem 1rem;cursor:pointer;transition:all .2s;position:relative}
+.prompt-card:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 4px 16px rgba(26,94,171,.1)}
+.prompt-card:active{transform:translateY(0)}
+.prompt-card.copied{border-color:var(--green);background:#f0fdf4}
+.prompt-emoji{font-size:1.2rem;margin-bottom:.35rem}
+.prompt-text{font-size:.82rem;line-height:1.6;color:var(--text)}
+.prompt-text .fill{color:var(--blue);font-weight:800;background:var(--bg);border-radius:4px;padding:0 3px}
+.copy-hint{font-size:.65rem;color:var(--muted);margin-top:.4rem;display:flex;align-items:center;gap:.3rem}
+.copied-badge{position:absolute;top:10px;right:10px;background:var(--green);color:#fff;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:20px;opacity:0;transition:opacity .3s}
+.prompt-card.copied .copied-badge{opacity:1}
+
+/* ── MY PROMPTS LOG ──────────────────────────────────── */
+.section-heading{font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:1rem 0 .5rem;display:flex;align-items:center;justify-content:space-between}
+.clear-log{background:none;border:none;font-size:.65rem;color:var(--muted);cursor:pointer;font-family:var(--font)}
+.clear-log:hover{color:var(--text)}
+.log-empty{background:var(--card);border:1.5px dashed var(--border);border-radius:12px;padding:1.2rem;text-align:center;font-size:.8rem;color:var(--muted)}
+.log-list{display:flex;flex-direction:column;gap:.4rem}
+.log-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem;font-size:.76rem;color:var(--text);line-height:1.5;position:relative}
+.log-item .log-meta{font-size:.62rem;color:var(--muted);margin-top:.25rem}
+.log-item .log-type{display:inline-block;font-size:.58rem;font-weight:800;padding:1px 7px;border-radius:20px;text-transform:uppercase;margin-right:.4rem}
+.log-type.start{background:#EAF1FB;color:var(--blue)}
+.log-type.up{background:#eafbee;color:var(--green)}
+.log-type.fix{background:#fff0f0;color:#C0392B}
+.log-type.custom{background:#f5f0ff;color:#6C3FA0}
+
+/* ── DONE SECTION ────────────────────────────────────── */
+.done-section{margin:1.2rem 0;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.2rem}
+.done-section h3{font-size:.9rem;font-weight:800;margin-bottom:.3rem}
+.done-section p{font-size:.78rem;color:var(--muted);margin-bottom:.9rem;line-height:1.5}
+.done-btn{width:100%;padding:.85rem;border-radius:12px;border:none;font-family:var(--font);font-size:.9rem;font-weight:800;cursor:pointer;transition:all .2s;background:var(--blue);color:#fff}
+.done-btn:hover{background:#1450a0}
+.done-btn.done-state{background:var(--green)}
+
+/* ── OWN PROMPT INPUT ────────────────────────────────── */
+.own-prompt{margin-bottom:1rem}
+.own-prompt textarea{width:100%;padding:.8rem 1rem;border-radius:12px;border:1.5px solid var(--border);font-family:var(--font);font-size:.82rem;resize:none;outline:none;line-height:1.55;transition:border-color .2s;background:var(--card);color:var(--text)}
+.own-prompt textarea:focus{border-color:var(--blue)}
+.own-prompt textarea::placeholder{color:var(--muted)}
+.own-prompt-row{display:flex;gap:.5rem;margin-top:.4rem}
+.copy-own{flex:1;padding:.7rem;border-radius:10px;border:none;background:var(--blue);color:#fff;font-family:var(--font);font-size:.8rem;font-weight:800;cursor:pointer;transition:background .2s}
+.copy-own:hover{background:#1450a0}
+.log-own{padding:.7rem 1rem;border-radius:10px;border:1.5px solid var(--border);background:var(--card);font-family:var(--font);font-size:.8rem;font-weight:800;cursor:pointer;color:var(--muted);transition:all .2s}
+.log-own:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── ANIMATIONS ──────────────────────────────────────── */
+.confetti-piece{position:fixed;width:9px;height:9px;border-radius:2px;pointer-events:none;z-index:9999;animation:cf 1.8s ease-in forwards}
+@keyframes cf{0%{transform:translateY(-10px) rotate(0);opacity:1}100%{transform:translateY(100vh) rotate(540deg);opacity:0}}
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#0f2d5a;color:#fff;border-radius:20px;padding:.7rem 1.3rem;font-size:.82rem;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.4,.64,1);white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.3);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- NAME SCREEN -->
+<div id="name-screen">
+  <div class="name-card">
+    <span class="name-rocket">🎮</span>
+    <h1>Game Studio</h1>
+    <p>Make a new game every day with Claude!</p>
+    <input id="name-in" class="name-input" type="text" placeholder="What's your name?" maxlength="20" autocomplete="off">
+    <div class="grade-row">
+      <button class="grade-btn sel" data-g="4" onclick="sg(4)">Grade 4</button>
+      <button class="grade-btn" data-g="5" onclick="sg(5)">Grade 5</button>
+    </div>
+    <button class="go-btn" onclick="launch()">🚀 Let's Build Games!</button>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">🎮 Game <span>Studio</span></div>
+  <div class="topbar-right">
+    <span class="player-name" id="tb-name"></span>
+    <div class="xp-wrap">
+      <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      <span class="rank-tag" id="rank-tag">Beginner</span>
+    </div>
+  </div>
+</div>
+
+<!-- DAY SELECTOR -->
+<div class="day-bar" id="day-bar"></div>
+
+<!-- MAIN CONTENT -->
+<div class="main" id="main-content"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ DATA ═════════════════════════════════════════════════════════════════════
+const DAYS = [
+  {day:1,genre:'Quiz Game',emoji:'🧠',tagline:'Test what you know!',colour:'#6C3FA0',
+   theme:'Pick ANY topic you love — animals, sports, space, food, movies...',
+   chips:['🦁 Animals','⚽ Sports','🚀 Space','🍕 Food','🎬 Movies'],
+   inspiration:'Think of 5 questions only YOUR friends might get wrong. Make it tricky!',
+   starters:[
+     {e:'🎤',t:'Make me a fun quiz game about [YOUR TOPIC] with 5 questions. Make it colourful and exciting. When I get an answer right, show a big celebration. Show the correct answer when I get it wrong.'},
+     {e:'🌈',t:'Create a quiz game about [YOUR TOPIC] for Grade 4 students. Add a score counter, bright colours, and make each question appear one at a time.'},
+     {e:'🏆',t:'Build me a quiz about [YOUR TOPIC]. Make it look like a game show with bright lights and exciting colours. Show my score at the end with a fun message.'},
+   ],
+   upgrades:[
+     {e:'⏱️',t:'Add a timer that counts down 15 seconds for each question. If time runs out, show the answer and move to the next question.'},
+     {e:'🎵',t:'Add fun sound effects — a happy sound when I get it right and a buzzer when I get it wrong. Make the correct answer flash green.'},
+     {e:'🏅',t:'Add a final score screen that says something different depending on how well I did — like "Quiz Champion!" if I get them all right.'},
+     {e:'🔀',t:'Make the questions appear in random order every time I play so it feels different each time.'},
+     {e:'🎯',t:'Add 4 answer buttons for each question. Make wrong answers shake when I click them.'},
+   ],
+   fixes:[
+     {e:'🖱️',t:'The buttons are not working when I click them. Please fix the clicking so I can select answers.'},
+     {e:'🔢',t:'The score is not going up when I get answers right. Fix the score counter.'},
+     {e:'➡️',t:'The quiz is not moving to the next question after I answer. Fix it so it goes forward automatically.'},
+     {e:'🔡',t:'The text is too small to read easily. Make all the words bigger.'},
+     {e:'🎨',t:'The colours are hard to see. Make the background and text colours easier to read.'},
+   ]},
+
+  {day:2,genre:'Maze Game',emoji:'🌀',tagline:'Find your way out!',colour:'#1A5EAB',
+   theme:'Your maze can be a jungle, haunted house, school, castle, or anywhere!',
+   chips:['🐭 Mouse','🦸 Hero','🐸 Frog','🤖 Robot','👻 Ghost'],
+   inspiration:'What is waiting at the end of your maze? Treasure? Pizza? A trophy?',
+   starters:[
+     {e:'🎮',t:'Make me a maze game where I control a [CHARACTER] using arrow keys. The maze should look like a [THEME]. I need to reach the exit to win. Make it colourful with a celebration when I finish.'},
+     {e:'⭐',t:'Create a maze game for kids. I use arrow keys to move through the maze. When I reach the star at the end I win and see a celebration screen.'},
+     {e:'🗺️',t:'Build a maze game where I am a [CHARACTER] trying to reach [GOAL]. Add arrow key controls and show how many steps I have taken.'},
+   ],
+   upgrades:[
+     {e:'⏱️',t:'Add a timer that counts how many seconds it takes me to finish. Show my best time so I can try to beat it.'},
+     {e:'🪙',t:'Add collectible coins hidden in the maze that I can pick up for bonus points.'},
+     {e:'📈',t:'Make the maze bigger and add 3 levels that get harder each time I complete one.'},
+     {e:'👾',t:'Add an enemy that wanders around the maze. If it touches me I lose a life.'},
+     {e:'🗺️',t:'Add a small map in the corner that shows where I am in the maze.'},
+   ],
+   fixes:[
+     {e:'🧱',t:'My character is walking through the walls. Fix the collision so I cannot go through walls.'},
+     {e:'⌨️',t:'The arrow keys are not moving my character. Fix the controls so arrow keys work.'},
+     {e:'🐢',t:'My character moves too fast and is hard to control. Make the movement slower.'},
+     {e:'🚪',t:'The exit is not showing up on screen. Make the exit clearly visible with a bright colour.'},
+     {e:'👁️',t:'The maze is too hard to see. Make the walls and paths clearer with better colours.'},
+   ]},
+
+  {day:3,genre:'Story Adventure',emoji:'📖',tagline:'You choose what happens!',colour:'#D4620E',
+   theme:'A story where every choice changes what happens — YOU are the hero!',
+   chips:['🧙 Wizard','🐉 Dragon','🏴‍☠️ Pirate','🦸 Superhero','🧚 Fairy'],
+   inspiration:'Where does your adventure start? A forest? A spaceship? Your school at midnight?',
+   starters:[
+     {e:'🗺️',t:'Make me a choose-your-own-adventure story where I am a [CHARACTER]. The story starts at [PLACE]. At each step I get 2 choices. Make it exciting with surprises. Use big colourful text.'},
+     {e:'✨',t:'Create a story game where I play as a [CHARACTER] who needs to [GOAL]. Give me choices at each step that lead to different endings. Make it fun for Grade 4 kids.'},
+     {e:'🎭',t:'Build an adventure story set in [PLACE]. I make choices that change what happens. Have at least 3 different endings — one good, one bad, one surprising.'},
+   ],
+   upgrades:[
+     {e:'🖼️',t:'Add pictures made from emoji and symbols to show each scene of the story so I can see where I am.'},
+     {e:'🎒',t:'Add an inventory where I can collect items during the story and use them to unlock special choices later.'},
+     {e:'❤️',t:'Add a health meter. Some choices cost health points. If health reaches zero I get a game over.'},
+     {e:'🎵',t:'Add sound effects for different parts of the story — a scary sound, a victory sound, a funny sound.'},
+     {e:'📜',t:'Add a story recap at the end that summarises all the choices I made to get my ending.'},
+   ],
+   fixes:[
+     {e:'🖱️',t:'The choice buttons are not working. Fix them so clicking a choice moves the story forward.'},
+     {e:'🔀',t:'The story is jumping to the wrong scene. Fix the story so choices lead to the correct next part.'},
+     {e:'📄',t:'The text is too long and hard to read. Break it into shorter paragraphs with more space.'},
+     {e:'🏁',t:'The ending is not showing up. Fix the game so it knows when the story is finished.'},
+     {e:'🔙',t:'The back button is taking me to the wrong place. Fix the navigation between scenes.'},
+   ]},
+
+  {day:4,genre:'Catch Game',emoji:'🎯',tagline:'Catch the good stuff, dodge the bad!',colour:'#2D8A3E',
+   theme:'Things fall from the sky — catch the ones you want, avoid the rest!',
+   chips:['🍎 Fruit','⭐ Stars','💎 Gems','🍕 Pizza','🪙 Coins'],
+   inspiration:'What falls in YOUR game? What should you NEVER catch?',
+   starters:[
+     {e:'🧺',t:'Make a catch game where [GOOD THINGS] fall from the sky and I move a basket left and right to catch them. [BAD THINGS] also fall and I must avoid them. Add a score and 3 lives.'},
+     {e:'🏃',t:'Create a game where I control a [CHARACTER] at the bottom of the screen using arrow keys. Good things fall for points, bad things take away lives. Make it colourful and fast.'},
+     {e:'📈',t:'Build a falling objects game. Good things are [GOOD]. Bad things are [BAD]. I move left and right to catch or dodge. Make things fall faster as my score gets higher.'},
+   ],
+   upgrades:[
+     {e:'💨',t:'Make things fall faster as my score gets higher. Add a level counter to show how many levels I have reached.'},
+     {e:'⭐',t:'Add a special golden item that appears sometimes — catching it gives 5 times the normal points.'},
+     {e:'🛡️',t:'Add a shield power-up I can collect that protects me from the next bad item that hits me.'},
+     {e:'💥',t:'Make caught items do a little explosion or pop animation before disappearing.'},
+     {e:'🏆',t:'Add a high score that saves and shows my best score so I can try to beat it next time.'},
+   ],
+   fixes:[
+     {e:'⬅️',t:'My basket or character is not moving with the arrow keys. Fix the controls.'},
+     {e:'📦',t:'The falling objects are going off the sides of the screen. Keep everything inside the game area.'},
+     {e:'💔',t:'I am catching bad items but not losing lives. Fix the life counter so it goes down correctly.'},
+     {e:'🎮',t:'The game is not ending when I run out of lives. Fix the game over screen.'},
+     {e:'😴',t:'Everything falls at the same speed and it feels boring. Make things fall at different speeds.'},
+   ]},
+
+  {day:5,genre:'Memory Game',emoji:'🃏',tagline:'Remember where everything is!',colour:'#C0392B',
+   theme:'Flip cards to find matching pairs. Train your brain!',
+   chips:['🐶🐱 Animals','🍎🍊 Fruit','🚀🌙 Space','⚽🏀 Sports','😀😎 Faces'],
+   inspiration:'What theme do your cards have? The more creative the better!',
+   starters:[
+     {e:'🎴',t:'Make a memory matching card game with [THEME] pictures on the cards. Show 12 cards face down. I click two at a time to flip them. If they match they stay up. Count how many tries it takes.'},
+     {e:'🧠',t:'Create a memory game with [NUMBER] pairs of matching [THEME] cards. Shuffle them randomly every game. Show my score and add a celebration when I match all pairs.'},
+     {e:'✨',t:'Build a flip-card memory game with [THEME] cards. I try to find all matching pairs in as few clicks as possible. Make the cards flip with a smooth animation.'},
+   ],
+   upgrades:[
+     {e:'⏱️',t:'Add a countdown timer. I have 60 seconds to match all the pairs before time runs out.'},
+     {e:'📊',t:'Add difficulty levels — Easy has 8 cards, Medium has 16 cards, Hard has 24 cards.'},
+     {e:'💃',t:'Make matched pairs do a little dance or bounce animation before staying face up.'},
+     {e:'⭐',t:'Add a star rating at the end — 3 stars for finishing quickly, 2 stars for normal speed, 1 star for a slow finish.'},
+     {e:'❌',t:'Add a rule that 3 wrong matches end the game so I have to be more careful.'},
+   ],
+   fixes:[
+     {e:'🖱️',t:'I can click more than 2 cards at once. Fix it so only 2 cards can be flipped at a time.'},
+     {e:'🔄',t:'Matched cards are flipping back over. Fix it so matched pairs stay face up permanently.'},
+     {e:'🔀',t:'The cards are not shuffling randomly. Make them shuffle in a different order every new game.'},
+     {e:'🏁',t:'The game is saying I won before I matched all the pairs. Fix the win condition.'},
+     {e:'📱',t:'The cards are too small on my screen. Make them bigger and easier to tap.'},
+   ]},
+
+  {day:6,genre:'Platformer Game',emoji:'🏃',tagline:'Jump, run, collect!',colour:'#E8A020',
+   theme:'Run and jump across platforms to reach the end!',
+   chips:['🐸 Frog','🤖 Robot','🐱 Cat','🦸 Hero','🐧 Penguin'],
+   inspiration:'What world does your character live in? Jungle? City? Underwater? Space?',
+   starters:[
+     {e:'🏃',t:'Make a platformer game where I control a [CHARACTER] with arrow keys to run and jump. There are platforms to jump on and I collect [ITEMS] for points. Add a [THEME] background.'},
+     {e:'⬆️',t:'Create a side-scrolling platform game. My character is a [CHARACTER]. I press right to move and up arrow or space to jump. Add platforms at different heights to jump between.'},
+     {e:'🌍',t:'Build a platform jumping game set in [WORLD]. I run and jump collecting [COLLECTIBLES]. If I fall off screen I lose a life. Make it fun and colourful.'},
+   ],
+   upgrades:[
+     {e:'👾',t:'Add enemies that walk back and forth on the platforms. If I touch them I lose a life.'},
+     {e:'🦅',t:'Add a double jump — I can press jump a second time while in the air to jump again once.'},
+     {e:'↔️',t:'Add moving platforms that slide left and right so I have to time my jumps.'},
+     {e:'🏁',t:'Add a goal door or flag at the end of the level that triggers a win screen with a celebration.'},
+     {e:'💎',t:'Add different types of collectibles — some worth 1 point, some worth 5, some worth 10.'},
+   ],
+   fixes:[
+     {e:'🕳️',t:'My character falls through the platforms. Fix the collision so I stand on top of platforms.'},
+     {e:'🎈',t:'My character floats and does not fall down. Fix gravity so my character falls properly.'},
+     {e:'🐌',t:'The jumping feels too floaty or too heavy. Adjust the jump to feel more fun and satisfying.'},
+     {e:'🧱',t:'My character runs off the edge of the screen. Add invisible walls on the left and right sides.'},
+     {e:'⌨️',t:'The arrow keys and space bar are not responding. Fix the keyboard controls.'},
+   ]},
+
+  {day:7,genre:'Drawing Game',emoji:'🎨',tagline:'Create your own artwork!',colour:'#6C3FA0',
+   theme:'A canvas where YOU are the artist. Draw anything you imagine!',
+   chips:['🖌️ Paintbrush','✏️ Pencil','🖍️ Crayon','🌈 Rainbow','⭐ Stamps'],
+   inspiration:'What will you draw first? Add tools that make YOUR art style unique!',
+   starters:[
+     {e:'🖌️',t:'Make a drawing app where I can draw on a white canvas by clicking and dragging my mouse. Add at least 6 bright colours to choose from. Add a brush size option and a clear button.'},
+     {e:'🎨',t:'Create a paint program for kids. I can draw freehand, pick colours, change brush size, and clear the canvas. Make the colour buttons big and easy to press.'},
+     {e:'🌈',t:'Build a drawing tool with a white canvas. Add rainbow colours, an eraser tool, a fill bucket tool, and a button to save or download my drawing.'},
+   ],
+   upgrades:[
+     {e:'🎭',t:'Add stamp tools — clicking the stamp button places a fun emoji or shape on the canvas wherever I click.'},
+     {e:'💨',t:'Add a spray paint tool that makes speckled dots like a real spray can.'},
+     {e:'↩️',t:'Add undo and redo buttons so I can fix mistakes without starting over.'},
+     {e:'⭐',t:'Add different brush shapes — round, square, and star shaped brushes.'},
+     {e:'🖼️',t:'Add a background chooser so I can draw on different coloured or patterned backgrounds.'},
+   ],
+   fixes:[
+     {e:'🖱️',t:'The drawing is not following my mouse. Fix the drawing so it tracks exactly where I move my cursor.'},
+     {e:'🎨',t:'The colour buttons are not changing the drawing colour. Fix the colour picker so it works.'},
+     {e:'🧹',t:'The clear button is also clearing my colour choice. Fix it so it only clears the drawing.'},
+     {e:'📏',t:'The lines are too thin and hard to see. Make the default brush size bigger.'},
+     {e:'📐',t:'The drawing goes outside the canvas area. Keep all drawing inside the white box.'},
+   ]},
+
+  {day:8,genre:'Pet Simulator',emoji:'🐾',tagline:'Take care of your virtual pet!',colour:'#E8A020',
+   theme:'Your pet needs food, play, and love. Keep it happy!',
+   chips:['🐶 Dog','🐱 Cat','🐹 Hamster','🐰 Bunny','🦜 Parrot'],
+   inspiration:"What is your pet's name? What makes it uniquely yours?",
+   starters:[
+     {e:'🐾',t:'Make a virtual pet game where I take care of a [PET]. It has hunger, happiness, and energy meters. I click Feed, Play, and Sleep buttons to look after it. The pet shows different emoji faces when happy or sad.'},
+     {e:'📊',t:'Create a pet simulator with a [PET]. Add meters for hunger, fun, and tiredness. The meters go down over time and I click buttons to fill them back up. If a meter hits zero the pet becomes unhappy.'},
+     {e:'🥚',t:'Build a Tamagotchi-style game with a [PET]. Show its mood with a big emoji face. Add buttons to feed it, play with it, and put it to sleep. Add fun animations when I press each button.'},
+   ],
+   upgrades:[
+     {e:'📅',t:'Add a day counter — the pet gets older over time and changes how it looks as it grows.'},
+     {e:'🛒',t:'Add a store where I can buy different foods and toys using coins I earn by keeping the pet happy.'},
+     {e:'✨',t:'Add a happiness system — if I care for my pet really well it evolves into a special rare form.'},
+     {e:'🎮',t:'Add a mini-game I can play with my pet to increase its happiness faster than just pressing buttons.'},
+     {e:'💾',t:'Add a save feature so my pet remembers its stats and name when I come back to the game.'},
+   ],
+   fixes:[
+     {e:'⚡',t:'The meters are going down too fast and I cannot keep up. Make them go down more slowly.'},
+     {e:'🖱️',t:'The Feed, Play, and Sleep buttons are not doing anything. Fix the buttons so they work.'},
+     {e:'😊',t:'The pet face is not changing to show different emotions. Fix the expressions so they update.'},
+     {e:'💯',t:'The meters are going above 100 percent. Make 100 the maximum for all meters.'},
+     {e:'😢',t:'The game says my pet is unhappy even when all the meters are full. Fix the happiness calculation.'},
+   ]},
+
+  {day:9,genre:'Word Game',emoji:'📝',tagline:'Play with words!',colour:'#1A5EAB',
+   theme:'Guess words, unscramble letters, or race against the clock!',
+   chips:['🔤 Letters','💡 Clues','⏰ Timer','🏆 Trophy','🎯 Target'],
+   inspiration:'What subject is your word game about? Animals? Countries? Food? Science?',
+   starters:[
+     {e:'🔡',t:'Make a word guessing game like Hangman but with a fun [THEME] theme. I guess one letter at a time. Show blank spaces for the hidden word. After 6 wrong guesses I lose. Add a hint button.'},
+     {e:'🔀',t:'Create a word unscramble game about [TOPIC]. Show me a scrambled word and I figure out what it says. Give me 3 hints I can reveal if I am stuck. Add a score and a next word button.'},
+     {e:'🔍',t:'Build a word search puzzle with [NUMBER] hidden words about [TOPIC]. I click the first and last letter of each word to select it. Highlight found words in different colours.'},
+   ],
+   upgrades:[
+     {e:'📚',t:'Add a category selector so I can choose the topic I want to play — animals, food, or sports.'},
+     {e:'🔥',t:'Add a streak counter that gives double points if I get several answers correct in a row.'},
+     {e:'📊',t:'Add difficulty levels — Easy shows long common words, Hard shows short tricky words.'},
+     {e:'👥',t:'Add a two player mode where players take turns guessing and whoever gets more right wins.'},
+     {e:'🎉',t:'Add a celebration animation when I find a word — make it fly across the screen or explode into confetti.'},
+   ],
+   fixes:[
+     {e:'⌨️',t:'The letter buttons are not registering my clicks. Fix the letter input so it responds.'},
+     {e:'✅',t:'The game is marking wrong answers as correct. Fix the answer checking so only correct answers score.'},
+     {e:'💡',t:'The hint is giving away the whole answer. Make the hint more subtle — just a small clue.'},
+     {e:'➡️',t:'The game is not moving to the next word after I solve it. Fix the next word button.'},
+     {e:'✏️',t:'Some words have spelling mistakes in the game. Fix all the words so they are spelled correctly.'},
+   ]},
+
+  {day:10,genre:'My Own Game',emoji:'🌟',tagline:'YOU design it. Claude builds it!',colour:'#C0392B',
+   theme:'This is YOUR day. Create any game you can dream up!',
+   chips:['💡 Your Idea','🎮 Any Game','🌈 Any Theme','🏆 Your Rules','🚀 Your World'],
+   inspiration:'Think of the most fun game you have ever played — now make your own version, but even better!',
+   starters:[
+     {e:'💡',t:'Make me a [GAME TYPE] game about [YOUR TOPIC]. The player does [MAIN ACTION]. You win by [WIN CONDITION]. Make it look [DESCRIBE THE STYLE] with [SPECIAL FEATURE].'},
+     {e:'🌟',t:'I want to create my own unique game called [YOUR GAME NAME]. Here is how it works: [EXPLAIN THE RULES IN YOUR OWN WORDS]. Make it colourful and fun for kids my age.'},
+     {e:'🎮',t:'Build a game that mixes [GAME TYPE 1] and [GAME TYPE 2]. Set it in [YOUR WORLD]. The player controls [YOUR CHARACTER] and the goal is [YOUR GOAL].'},
+   ],
+   upgrades:[
+     {e:'✨',t:'Add the best feature from another game I played this week into this game.'},
+     {e:'📖',t:'Add a story and characters that make this game feel like it has its own world.'},
+     {e:'👥',t:'Add a 2-player mode where two people play at the same time on the same keyboard.'},
+     {e:'📈',t:'Make this game into 3 levels where each level has a new surprise or challenge.'},
+     {e:'🔐',t:'Add a secret code that unlocks a special hidden mode in my game.'},
+   ],
+   fixes:[
+     {e:'🔧',t:'Something is broken in my game. Here is what happens: [DESCRIBE THE PROBLEM]. Please fix it.'},
+     {e:'😴',t:'The game is too easy. Make it more challenging without making it frustrating for kids.'},
+     {e:'😤',t:'The game is too hard. Make it a little easier so Grade 4 kids can enjoy it.'},
+     {e:'🎨',t:'The game looks plain and boring. Make it more colourful, exciting, and fun looking.'},
+     {e:'🎬',t:'Add a proper start screen with my game name and an end screen with a play again button.'},
+   ]},
+];
+
+const RANKS=['Beginner 🌱','Builder 🔨','Creator ✨','Designer 🎨','Game Dev ⚡','Legend 🌟'];
+const XP_PER_DAY=100;
+
+// ══ STATE ════════════════════════════════════════════════════════════════════
+let state={name:'',grade:4,activeDay:1,completed:[],promptLog:[],xp:0};
+let gradeSelected=4;
+let activePromptTab='start';
+
+function loadState(){try{const s=localStorage.getItem('cm_studio_v1');if(s)state=JSON.parse(s);}catch(e){}}
+function saveState(){localStorage.setItem('cm_studio_v1',JSON.stringify(state));}
+
+// ══ LAUNCH ═══════════════════════════════════════════════════════════════════
+function sg(g){gradeSelected=g;document.querySelectorAll('.grade-btn').forEach(b=>b.classList.toggle('sel',+b.dataset.g===g))}
+function launch(){
+  const n=document.getElementById('name-in').value.trim();
+  if(!n){document.getElementById('name-in').focus();return;}
+  state.name=n;state.grade=gradeSelected;
+  saveState();
+  document.getElementById('name-screen').style.display='none';
+  init();
+}
+document.getElementById('name-in').addEventListener('keydown',e=>{if(e.key==='Enter')launch()});
+
+// ══ INIT ══════════════════════════════════════════════════════════════════════
+function init(){
+  document.getElementById('tb-name').textContent=state.name;
+  renderDayBar();
+  renderMain();
+  updateXP();
+}
+
+function updateXP(){
+  state.xp=state.completed.length*XP_PER_DAY;
+  const ri=Math.min(RANKS.length-1,Math.floor(state.xp/(XP_PER_DAY*2)));
+  document.getElementById('rank-tag').textContent=RANKS[ri];
+  const pct=((state.completed.length%2)/2)*100;
+  document.getElementById('xp-fill').style.width=pct+'%';
+}
+
+// ══ DAY BAR ══════════════════════════════════════════════════════════════════
+function renderDayBar(){
+  const bar=document.getElementById('day-bar');
+  bar.innerHTML=DAYS.map(d=>{
+    const done=state.completed.includes(d.day);
+    const active=d.day===state.activeDay;
+    let cls='day-chip';
+    if(active)cls+=' active-day';
+    if(done)cls+=' done-day';
+    return `<button class="${cls}" style="${active?'background:'+d.colour+';border-color:'+d.colour+';color:#fff':done?'border-color:var(--green);color:var(--green)':''}" onclick="switchDay(${d.day})">Day ${d.day} ${d.emoji}</button>`;
+  }).join('');
+}
+
+function switchDay(n){
+  state.activeDay=n;
+  activePromptTab='start';
+  saveState();
+  renderDayBar();
+  renderMain();
+}
+
+// ══ MAIN RENDER ═══════════════════════════════════════════════════════════════
+function renderMain(){
+  const d=DAYS[state.activeDay-1];
+  const done=state.completed.includes(d.day);
+  const log=state.promptLog.filter(p=>p.day===d.day);
+
+  const chipsHTML=d.chips.map(c=>`<button class="inspire-chip" onclick="fillInspire('${c}')">${c}</button>`).join('');
+
+  const startHTML=renderPromptCards(d.starters,'start');
+  const upHTML=renderPromptCards(d.upgrades,'up');
+  const fixHTML=renderPromptCards(d.fixes,'fix');
+
+  const logHTML=log.length===0
+    ?'<div class="log-empty">✏️ Your prompts will appear here after you copy them. Start with a prompt below!</div>'
+    :'<div class="log-list">'+log.slice().reverse().map(p=>`<div class="log-item"><span class="log-type ${p.type}">${p.type==='start'?'Starter':p.type==='up'?'Upgrade':p.type==='fix'?'Fix It':'My Own'}</span>${p.text}<div class="log-meta">${formatTime(p.time)}</div></div>`).join('')+'</div>';
+
+  document.getElementById('main-content').innerHTML=`
+    <div class="hero-card" style="background:linear-gradient(135deg,${d.colour},${d.colour}dd)">
+      <div class="hero-badge">Day ${d.day} of 10</div>
+      <div class="hero-title">${d.emoji} ${d.genre}</div>
+      <div class="hero-tagline">${d.tagline}</div>
+      <div class="hero-theme">
+        <strong>Today's theme</strong>
+        ${d.theme}
+        <div class="inspire-chips">${chipsHTML}</div>
+      </div>
+    </div>
+
+    <div style="background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.9rem;font-size:.82rem;line-height:1.6;color:var(--text)">
+      💡 <strong>Inspiration:</strong> ${d.inspiration}
+    </div>
+
+    <div class="panel-tabs">
+      <button class="ptab ptab-start ${activePromptTab==='start'?'active-ptab':''}" onclick="switchPTab('start')">🚀 Start Here</button>
+      <button class="ptab ptab-up ${activePromptTab==='up'?'active-ptab':''}" onclick="switchPTab('up')">⬆️ Make Better</button>
+      <button class="ptab ptab-fix ${activePromptTab==='fix'?'active-ptab':''}" onclick="switchPTab('fix')">🔧 Fix It</button>
+    </div>
+
+    <div class="prompt-label">${activePromptTab==='start'?'📋 Pick a starter prompt — copy it, then say it out loud to Claude:':activePromptTab==='up'?'✨ Already have a game? Make it even more awesome:':'🔧 Something not working? Use one of these:'}</div>
+
+    <div class="prompt-panel active-pp" id="prompt-cards">
+      ${activePromptTab==='start'?startHTML:activePromptTab==='up'?upHTML:fixHTML}
+    </div>
+
+    <div class="own-prompt">
+      <div class="prompt-label" style="margin-top:1rem;margin-bottom:.4rem">✍️ Write your own prompt:</div>
+      <textarea id="own-text" rows="3" placeholder="Type your own idea here... e.g. Add a rainbow background and make the characters dance"></textarea>
+      <div class="own-prompt-row">
+        <button class="copy-own" onclick="copyOwn()">📋 Copy My Prompt</button>
+        <button class="log-own" onclick="logOwn()">📝 Save to My Log</button>
+      </div>
+    </div>
+
+    <div class="section-heading">
+      📜 My Prompt History Today
+      <button class="clear-log" onclick="clearLog()">Clear</button>
+    </div>
+    ${logHTML}
+
+    <div class="done-section">
+      <h3>${done?'✅ Day '+d.day+' Complete!':'🏁 Finished your '+d.genre+'?'}</h3>
+      <p>${done?'Amazing work! Your '+d.emoji+' '+d.genre+' is done. Move to the next day when you\'re ready!':'When your game is working and you\'re happy with it, mark it as complete to earn your badge!'}</p>
+      <button class="done-btn ${done?'done-state':''}" onclick="markDone(${d.day})">${done?'⭐ Earned your badge!':'✔ My Game is Done! (+XP)'}</button>
+    </div>
+  `;
+}
+
+function renderPromptCards(prompts,type){
+  return prompts.map((p,i)=>`
+    <div class="prompt-card" id="pc-${type}-${i}" onclick="copyPrompt('${type}',${i})">
+      <div class="prompt-emoji">${p.e}</div>
+      <div class="prompt-text">${highlightFills(p.t)}</div>
+      <div class="copy-hint">👆 Tap to copy — then paste into Claude</div>
+      <span class="copied-badge">✓ Copied!</span>
+    </div>`).join('');
+}
+
+function highlightFills(text){
+  return text.replace(/\[([^\]]+)\]/g,'<span class="fill">[$1]</span>');
+}
+
+function switchPTab(tab){
+  activePromptTab=tab;
+  renderMain();
+}
+
+function fillInspire(chip){
+  const ta=document.getElementById('own-text');
+  if(ta){ta.value=chip+' — ';ta.focus();}
+}
+
+// ══ COPY PROMPTS ══════════════════════════════════════════════════════════════
+function copyPrompt(type,idx){
+  const d=DAYS[state.activeDay-1];
+  const arr=type==='start'?d.starters:type==='up'?d.upgrades:d.fixes;
+  const text=arr[idx].t;
+  // Strip HTML fill spans for clipboard
+  const clean=text.replace(/\[([^\]]+)\]/g,'[$1]');
+  copyToClipboard(clean);
+  // Visual feedback
+  const card=document.getElementById('pc-'+type+'-'+idx);
+  if(card){card.classList.add('copied');setTimeout(()=>card.classList.remove('copied'),2000);}
+  // Log it
+  logPrompt(clean,type);
+  showToast('📋 Copied! Now say it to Claude (or paste it)');
+}
+
+function copyOwn(){
+  const text=document.getElementById('own-text')?.value.trim();
+  if(!text){showToast('✏️ Write a prompt first!');return;}
+  copyToClipboard(text);
+  showToast('📋 Your prompt is copied!');
+}
+
+function logOwn(){
+  const text=document.getElementById('own-text')?.value.trim();
+  if(!text){showToast('✏️ Write something first!');return;}
+  logPrompt(text,'custom');
+  document.getElementById('own-text').value='';
+  showToast('📝 Saved to your log!');
+  renderMain();
+}
+
+function copyToClipboard(text){
+  if(navigator.clipboard){navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));}
+  else fallbackCopy(text);
+}
+
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(ta);
+}
+
+function logPrompt(text,type){
+  if(!state.promptLog)state.promptLog=[];
+  state.promptLog.push({day:state.activeDay,text,type,time:Date.now()});
+  if(state.promptLog.length>100)state.promptLog=state.promptLog.slice(-100);
+  saveState();
+  // Re-render log section only
+  const logSection=document.querySelector('.section-heading');
+  if(logSection){
+    const log=state.promptLog.filter(p=>p.day===state.activeDay);
+    const next=logSection.nextElementSibling;
+    if(next){
+      next.outerHTML=log.length===0
+        ?'<div class="log-empty">✏️ Your prompts will appear here after you copy them!</div>'
+        :'<div class="log-list">'+log.slice().reverse().map(p=>`<div class="log-item"><span class="log-type ${p.type}">${p.type==='start'?'Starter':p.type==='up'?'Upgrade':p.type==='fix'?'Fix It':'My Own'}</span>${p.text}<div class="log-meta">${formatTime(p.time)}</div></div>`).join('')+'</div>';
+    }
+  }
+}
+
+function clearLog(){
+  state.promptLog=(state.promptLog||[]).filter(p=>p.day!==state.activeDay);
+  saveState();renderMain();
+}
+
+function formatTime(ts){
+  const d=new Date(ts);
+  return d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+// ══ MARK DONE ══════════════════════════════════════════════════════════════════
+function markDone(day){
+  if(state.completed.includes(day))return;
+  state.completed.push(day);saveState();
+  confetti();
+  showToast('🎉 Amazing! Day '+day+' badge earned! +'+XP_PER_DAY+' XP!');
+  updateXP();
+  renderDayBar();
+  renderMain();
+  // Auto-advance to next day
+  if(day<10){setTimeout(()=>{switchDay(day+1);},1600);}
+  else{setTimeout(()=>{showToast('🌟 ALL 10 GAMES COMPLETE! You are a real Game Designer!');},1800);}
+}
+
+// ══ ANIMATIONS ══════════════════════════════════════════════════════════════════
+function confetti(){
+  const cols=['#E8A020','#1A5EAB','#2D8A3E','#D4620E','#6C3FA0','#fff'];
+  for(let i=0;i<28;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='confetti-piece';
+      el.style.cssText=`left:${Math.random()*100}vw;top:-10px;background:${cols[Math.floor(Math.random()*cols.length)]};animation-duration:${1.2+Math.random()*.9}s;animation-delay:${Math.random()*.3}s;border-radius:${Math.random()>.5?'50%':'2px'}`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),2500);
+    },i*40);
+  }
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ══ BOOT ══════════════════════════════════════════════════════════════════════
+loadState();
+if(state.name){
+  document.getElementById('name-screen').style.display='none';
+  init();
+}
+</script>
+</body>
+</html>
