@@ -9,7 +9,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--red:#C0392B}
-html,body{height:100%;font-family:var(--font);background:linear-gradient(145deg,#060e22,#1a3a6e,#0a1628);display:flex;align-items:center;justify-content:center;padding:1rem}
+html,body{min-height:100%;font-family:var(--font);background:linear-gradient(145deg,#060e22,#1a3a6e,#0a1628);display:flex;align-items:center;justify-content:center;padding:1rem}
 .card{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:2.2rem 2rem;width:100%;max-width:420px}
 .logo{text-align:center;margin-bottom:1.5rem}
 .logo-icon{font-size:3rem;display:block;animation:bob 3s ease-in-out infinite}
@@ -26,19 +26,36 @@ input,select{width:100%;padding:.8rem 1rem;border-radius:10px;border:1.5px solid
 input::placeholder{color:rgba(255,255,255,.3)}
 input:focus,select:focus{border-color:var(--gold)}
 select option{background:#1a3a6e;color:#fff}
+/* password wrapper */
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:2.8rem}
+.pw-toggle{position:absolute;right:.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(255,255,255,.45);font-size:1.1rem;line-height:1;padding:.2rem;transition:color .2s}
+.pw-toggle:hover{color:rgba(255,255,255,.85)}
+/* role / grade */
 .role-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
 .role-btn{padding:.6rem;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-family:var(--font);font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s;text-align:center}
 .role-btn.sel{border-color:var(--gold);background:rgba(232,160,32,.15);color:#fff}
 .grade-row{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
 .grade-btn{padding:.55rem;border-radius:10px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.6);font-family:var(--font);font-size:.82rem;font-weight:800;cursor:pointer;transition:all .2s}
 .grade-btn.sel{border-color:var(--blue);background:rgba(26,94,171,.25);color:#fff}
+/* submit */
 .submit-btn{width:100%;padding:.95rem;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),#f5c030);color:#1a1a2e;font-family:var(--display);font-size:1.1rem;cursor:pointer;transition:transform .15s;margin-top:.3rem}
 .submit-btn:hover{transform:translateY(-2px)}
 .submit-btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
+/* messages */
 .error{background:rgba(192,57,43,.2);border:1px solid rgba(192,57,43,.4);color:#ff8a7a;border-radius:8px;padding:.6rem .9rem;font-size:.8rem;font-weight:700;display:none}
 .error.show{display:block}
+.success-box{background:rgba(45,138,62,.2);border:1px solid rgba(45,138,62,.45);color:#6fe08a;border-radius:12px;padding:1rem 1.1rem;font-size:.85rem;font-weight:700;display:none;text-align:center;line-height:1.6}
+.success-box.show{display:block}
+.success-box .sb-icon{font-size:2rem;display:block;margin-bottom:.4rem}
+/* forgot link */
+.forgot-link{background:none;border:none;color:rgba(255,255,255,.4);font-family:var(--font);font-size:.72rem;font-weight:700;cursor:pointer;text-align:right;text-decoration:underline;padding:0;margin-top:-.2rem;transition:color .2s}
+.forgot-link:hover{color:rgba(255,255,255,.75)}
+/* info */
 .info-note{font-size:.72rem;color:rgba(255,255,255,.35);text-align:center;margin-top:.5rem;line-height:1.5}
-#grade-wrap{display:none}
+/* redirect countdown */
+.redirect-bar{background:rgba(255,255,255,.08);border-radius:8px;height:4px;margin-top:.75rem;overflow:hidden}
+.redirect-fill{height:100%;background:var(--gold);width:0%;transition:width linear}
 </style>
 </head>
 <body>
@@ -48,38 +65,45 @@ select option{background:#1a3a6e;color:#fff}
     <h1>Game <span>Studio</span></h1>
   </div>
 
-  <div class="tabs">
+  <div class="tabs" id="main-tabs">
     <button class="tab active" onclick="showTab('login')">Sign In</button>
     <button class="tab" onclick="showTab('signup')">Create Account</button>
   </div>
 
-  <!-- LOGIN -->
+  <!-- ── SIGN IN ── -->
   <form class="form active" id="login-form" onsubmit="doLogin(event)">
     <div>
       <label>Email</label>
-      <input type="email" id="l-email" placeholder="your@email.com" required>
+      <input type="email" id="l-email" placeholder="your@email.com" required autocomplete="email">
     </div>
     <div>
       <label>Password</label>
-      <input type="password" id="l-password" placeholder="••••••••" required>
+      <div class="pw-wrap">
+        <input type="password" id="l-password" placeholder="••••••••" required autocomplete="current-password">
+        <button type="button" class="pw-toggle" onclick="togglePw('l-password',this)" title="Show / hide password">👁</button>
+      </div>
     </div>
+    <button type="button" class="forgot-link" onclick="showTab('forgot')">Forgot password?</button>
     <div class="error" id="l-error"></div>
     <button class="submit-btn" type="submit" id="l-btn">🚀 Sign In</button>
   </form>
 
-  <!-- SIGN UP -->
+  <!-- ── SIGN UP ── -->
   <form class="form" id="signup-form" onsubmit="doSignup(event)">
     <div>
       <label>Your Name</label>
-      <input type="text" id="s-name" placeholder="First name or nickname" maxlength="30" required>
+      <input type="text" id="s-name" placeholder="First name or nickname" maxlength="30" required autocomplete="name">
     </div>
     <div>
       <label>Email</label>
-      <input type="email" id="s-email" placeholder="your@email.com" required>
+      <input type="email" id="s-email" placeholder="your@email.com" required autocomplete="email">
     </div>
     <div>
       <label>Password</label>
-      <input type="password" id="s-password" placeholder="At least 6 characters" minlength="6" required>
+      <div class="pw-wrap">
+        <input type="password" id="s-password" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password">
+        <button type="button" class="pw-toggle" onclick="togglePw('s-password',this)" title="Show / hide password">👁</button>
+      </div>
     </div>
     <div>
       <label>I am a…</label>
@@ -96,12 +120,34 @@ select option{background:#1a3a6e;color:#fff}
       </div>
     </div>
     <div class="error" id="s-error"></div>
+    <div class="success-box" id="s-success">
+      <span class="sb-icon">🎉</span>
+      <span id="s-success-msg"></span>
+      <div class="redirect-bar"><div class="redirect-fill" id="s-redirect-fill"></div></div>
+    </div>
     <button class="submit-btn" type="submit" id="s-btn">✨ Create Account</button>
     <p class="info-note">Instructor &amp; Admin accounts are created by your program administrator.</p>
   </form>
+
+  <!-- ── FORGOT PASSWORD ── -->
+  <form class="form" id="forgot-form" onsubmit="doForgot(event)">
+    <div style="color:rgba(255,255,255,.7);font-size:.82rem;line-height:1.55;margin-bottom:.2rem">
+      Enter your email address and we'll send you a link to reset your password.
+    </div>
+    <div>
+      <label>Email</label>
+      <input type="email" id="f-email" placeholder="your@email.com" required autocomplete="email">
+    </div>
+    <div class="error" id="f-error"></div>
+    <div class="success-box" id="f-success">
+      <span class="sb-icon">📧</span>
+      <span id="f-success-msg"></span>
+    </div>
+    <button class="submit-btn" type="submit" id="f-btn">📧 Send Reset Link</button>
+    <button type="button" class="forgot-link" style="text-align:center;margin-top:.4rem" onclick="showTab('login')">← Back to Sign In</button>
+  </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = 'https://xoxjcpbruryjcqonzwag.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
@@ -121,59 +167,135 @@ async function redirectByRole(){
   const {data:{user}} = await sb.auth.getUser();
   if(!user) return;
   const {data:p} = await sb.from('profiles').select('role').eq('id',user.id).single();
-  if(p) window.location.href = ROUTES[p.role]||'/student';
+  if(p) window.location.href = ROUTES[p.role] || '/student';
 }
 
+// ── TAB SWITCHER ──────────────────────────────────────────
 function showTab(t){
-  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='login'?0:1)));
-  document.getElementById('login-form').classList.toggle('active',t==='login');
-  document.getElementById('signup-form').classList.toggle('active',t==='signup');
+  const tabs = ['login','signup','forgot'];
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active', tabs[i]===t));
+  // hide the tab bar on the forgot screen
+  document.getElementById('main-tabs').style.display = t==='forgot' ? 'none' : 'flex';
+  tabs.forEach(id=>{
+    const el = document.getElementById(id+'-form');
+    el.classList.toggle('active', id===t);
+  });
 }
 
+// ── SHOW / HIDE PASSWORD ──────────────────────────────────
+function togglePw(inputId, btn){
+  const input = document.getElementById(inputId);
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+  btn.title = show ? 'Hide password' : 'Show password';
+}
+
+// ── ROLE / GRADE PICKERS ─────────────────────────────────
 function pickRole(r){
-  selectedRole=r;
+  selectedRole = r;
   document.querySelectorAll('.role-btn').forEach(b=>b.classList.toggle('sel',b.dataset.r===r));
-  document.getElementById('grade-wrap').style.display = r==='student'?'block':'none';
+  document.getElementById('grade-wrap').style.display = r==='student' ? 'block' : 'none';
 }
-
 function pickGrade(g){
-  selectedGrade=g;
+  selectedGrade = g;
   document.querySelectorAll('.grade-btn').forEach(b=>b.classList.toggle('sel',+b.dataset.g===g));
 }
+document.getElementById('grade-wrap').style.display = 'block';
 
-// Show grade selector by default
-document.getElementById('grade-wrap').style.display='block';
-
+// ── SIGN IN ───────────────────────────────────────────────
 async function doLogin(e){
   e.preventDefault();
   const err = document.getElementById('l-error');
   const btn = document.getElementById('l-btn');
   err.classList.remove('show');
-  btn.disabled=true; btn.textContent='Signing in…';
+  btn.disabled = true; btn.textContent = 'Signing in…';
   const {error} = await sb.auth.signInWithPassword({
-    email: document.getElementById('l-email').value,
+    email:    document.getElementById('l-email').value,
     password: document.getElementById('l-password').value
   });
-  btn.disabled=false; btn.textContent='🚀 Sign In';
-  if(error){err.textContent=error.message;err.classList.add('show');return;}
+  btn.disabled = false; btn.textContent = '🚀 Sign In';
+  if(error){ err.textContent = error.message; err.classList.add('show'); return; }
   await redirectByRole();
 }
 
+// ── SIGN UP ───────────────────────────────────────────────
 async function doSignup(e){
   e.preventDefault();
   const err = document.getElementById('s-error');
   const btn = document.getElementById('s-btn');
+  const successBox = document.getElementById('s-success');
+  const successMsg = document.getElementById('s-success-msg');
   err.classList.remove('show');
-  const name = document.getElementById('s-name').value.trim();
-  const email = document.getElementById('s-email').value;
+  successBox.classList.remove('show');
+
+  const name     = document.getElementById('s-name').value.trim();
+  const email    = document.getElementById('s-email').value.trim();
   const password = document.getElementById('s-password').value;
-  if(!name){err.textContent='Please enter your name.';err.classList.add('show');return;}
-  btn.disabled=true; btn.textContent='Creating account…';
-  const meta = {name, role:selectedRole, grade: selectedRole==='student'?selectedGrade:null};
-  const {error} = await sb.auth.signUp({email, password, options:{data:meta}});
-  btn.disabled=false; btn.textContent='✨ Create Account';
-  if(error){err.textContent=error.message;err.classList.add('show');return;}
-  await redirectByRole();
+  if(!name){ err.textContent = 'Please enter your name.'; err.classList.add('show'); return; }
+
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  const meta = {name, role: selectedRole, grade: selectedRole==='student' ? selectedGrade : null};
+
+  const {data, error} = await sb.auth.signUp({
+    email, password,
+    options: {
+      data: meta,
+      emailRedirectTo: window.location.origin + '/student' // fallback for email link
+    }
+  });
+
+  btn.disabled = false; btn.textContent = '✨ Create Account';
+
+  if(error){ err.textContent = error.message; err.classList.add('show'); return; }
+
+  // ── Session returned immediately (email confirm OFF) ────
+  if(data.session){
+    successMsg.textContent = `Welcome, ${name}! 🎉 Your account is ready. Taking you to your portal…`;
+    btn.style.display = 'none';
+    successBox.classList.add('show');
+    startRedirectBar(2500, redirectByRole);
+    return;
+  }
+
+  // ── No session yet (email confirm ON) ──────────────────
+  successMsg.innerHTML = `Account created, ${name}! 📧<br>We've sent a confirmation email to <strong>${email}</strong>.<br>Click the link in that email to activate your account, then come back to sign in.`;
+  btn.style.display = 'none';
+  successBox.classList.add('show');
+}
+
+// ── FORGOT PASSWORD ───────────────────────────────────────
+async function doForgot(e){
+  e.preventDefault();
+  const err     = document.getElementById('f-error');
+  const ok      = document.getElementById('f-success');
+  const okMsg   = document.getElementById('f-success-msg');
+  const btn     = document.getElementById('f-btn');
+  err.classList.remove('show');
+  ok.classList.remove('show');
+
+  const email = document.getElementById('f-email').value.trim();
+  btn.disabled = true; btn.textContent = 'Sending…';
+
+  const {error} = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/reset-password'
+  });
+
+  btn.disabled = false; btn.textContent = '📧 Send Reset Link';
+
+  if(error){ err.textContent = error.message; err.classList.add('show'); return; }
+
+  okMsg.innerHTML = `Password reset email sent to <strong>${email}</strong>.<br>Check your inbox and follow the link to set a new password.`;
+  ok.classList.add('show');
+  btn.style.display = 'none';
+}
+
+// ── REDIRECT PROGRESS BAR ────────────────────────────────
+function startRedirectBar(ms, callback){
+  const fill = document.getElementById('s-redirect-fill');
+  fill.style.transition = `width ${ms}ms linear`;
+  requestAnimationFrame(()=>{ fill.style.width = '100%'; });
+  setTimeout(callback, ms);
 }
 </script>
 </body>
