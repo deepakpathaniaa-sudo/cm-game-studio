@@ -6,6 +6,7 @@
 <title>Admin — Concept Mastery Game Studio</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--bg:#f0f4ff;--card:#fff;--border:#dde4f5;--text:#1a1a2e;--muted:#6b7280;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--red:#C0392B;--radius:14px}
@@ -63,6 +64,37 @@ input.fi:focus,select.fi:focus{border-color:var(--blue)}
 .link-names{font-weight:700}
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(80px);background:#0f2d5a;color:#fff;border-radius:20px;padding:.7rem 1.3rem;font-size:.82rem;font-weight:700;z-index:9999;transition:transform .4s cubic-bezier(.34,1.4,.64,1);pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
+/* ── QUIZ ADMIN ── */
+.qz-drop{border:2px dashed var(--border);border-radius:12px;padding:1.4rem 1rem;text-align:center;background:#fafbff;cursor:pointer;transition:all .18s}
+.qz-drop:hover{border-color:var(--blue);background:#f4f7ff}
+.qz-drop .ico{font-size:2.2rem;display:block;margin-bottom:.3rem}
+.qz-drop b{font-size:.9rem}
+.qz-drop small{display:block;color:var(--muted);font-size:.72rem;margin-top:.3rem}
+.qz-status{font-size:.76rem;font-weight:700;color:var(--muted);margin-top:.6rem;min-height:1rem}
+.qz-actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem;align-items:center}
+.btn-purple{background:var(--purple,#6C3FA0);color:#fff}
+.btn-outline{background:#fff;border:1.5px solid var(--border);color:var(--text)}
+.qz-hint{font-size:.72rem;color:var(--muted);line-height:1.5;margin-top:.5rem}
+/* editor */
+.q-edit{background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:.9rem 1rem;margin-bottom:.7rem}
+.q-edit-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.q-edit-head .qn{font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--purple,#6C3FA0)}
+.q-edit textarea{width:100%;padding:.6rem .75rem;border:1.5px solid var(--border);border-radius:9px;font-family:var(--font);font-size:.85rem;font-weight:600;resize:vertical;color:var(--text)}
+.opt-edit{display:flex;align-items:center;gap:.55rem;margin-top:.45rem}
+.opt-edit input[type=radio]{width:18px;height:18px;flex-shrink:0;accent-color:var(--green)}
+.opt-edit .lt{font-weight:900;color:var(--muted);width:16px}
+.opt-edit input[type=text]{flex:1;padding:.5rem .7rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.83rem;font-weight:600;color:var(--text)}
+.opt-edit input[type=text].is-correct{border-color:var(--green);background:#f4fdf6}
+.q-expl{width:100%;margin-top:.5rem;padding:.5rem .7rem;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:.78rem;color:var(--text)}
+.correct-hint{font-size:.66rem;color:var(--muted);margin-top:.4rem}
+/* quiz list */
+.qz-item{background:#fff;border:1.5px solid var(--border);border-radius:11px;padding:.7rem .9rem;display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem;flex-wrap:wrap}
+.qz-item .qz-t{font-weight:800;font-size:.86rem}
+.qz-item .qz-sub{font-size:.7rem;color:var(--muted)}
+.qz-pub{font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:uppercase}
+.qz-pub.on{background:#eafbee;color:var(--green)}
+.qz-pub.off{background:#f3f4f6;color:var(--muted)}
+.qz-item .spacer{margin-left:auto}
 </style>
 </head>
 <body>
@@ -81,6 +113,7 @@ input.fi:focus,select.fi:focus{border-color:var(--blue)}
     <button class="tab active" onclick="showTab('users')">👥 All Users</button>
     <button class="tab" onclick="showTab('create')">➕ Create Account</button>
     <button class="tab" onclick="showTab('link')">🔗 Link Parent → Student</button>
+    <button class="tab" onclick="showTab('quizzes')">🧠 Quizzes</button>
   </div>
 
   <!-- ALL USERS -->
@@ -156,6 +189,74 @@ input.fi:focus,select.fi:focus{border-color:var(--blue)}
           <div style="font-size:.72rem;font-weight:800;color:var(--muted);margin-bottom:.5rem">EXISTING LINKS</div>
           <div class="link-list" id="link-list"><div style="font-size:.78rem;color:var(--muted)">Loading…</div></div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZZES -->
+  <div class="tab-panel" id="tab-quizzes">
+    <div class="card">
+      <div class="card-header" id="qz-editor-title">📤 Upload a Quiz PDF</div>
+      <div class="card-body">
+        <div id="qz-create-view">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="fl">Quiz Title</label>
+              <input class="fi" type="text" id="qz-title" placeholder="e.g. Fractions Warm-Up" maxlength="80">
+            </div>
+            <div class="form-group">
+              <label class="fl">Grade (optional)</label>
+              <input class="fi" type="number" id="qz-grade" placeholder="4" min="1" max="12">
+            </div>
+          </div>
+          <div class="form-group" style="margin-top:.7rem">
+            <label class="fl">Description (optional)</label>
+            <input class="fi" type="text" id="qz-desc" placeholder="Short line shown to students" maxlength="140">
+          </div>
+          <div style="margin-top:.9rem">
+            <input type="file" id="qz-file" accept="application/pdf,.pdf" style="display:none" onchange="qzHandleFile(event)">
+            <div class="qz-drop" onclick="document.getElementById('qz-file').click()">
+              <span class="ico">📄</span>
+              <b>Choose a PDF to turn into a quiz</b>
+              <small>The PDF's text is read in your browser. You'll review every question before publishing.</small>
+            </div>
+            <div class="qz-status" id="qz-status"></div>
+          </div>
+          <div class="qz-actions" id="qz-parse-actions" style="display:none">
+            <button class="btn btn-blue" onclick="qzAutoDetect()">🔍 Auto-detect questions</button>
+            <button class="btn btn-purple" onclick="qzGenerateAI()" id="qz-ai-btn">✨ Generate with Claude</button>
+            <button class="btn btn-outline" onclick="qzAddBlank()">➕ Add blank question</button>
+          </div>
+          <div class="qz-hint" id="qz-ai-hint" style="display:none">
+            ✨ <b>Generate with Claude</b> needs the optional <code>generate-quiz</code> edge function deployed with an API key
+            (see <code>supabase/functions/generate-quiz</code>). Without it, use <b>Auto-detect</b> for PDFs that already contain
+            multiple-choice questions, or add questions by hand.
+          </div>
+        </div>
+
+        <!-- editor -->
+        <div id="qz-editor" style="display:none">
+          <div id="qz-questions"></div>
+          <div class="qz-actions">
+            <button class="btn btn-outline" onclick="qzAddBlank()">➕ Add question</button>
+          </div>
+          <div style="margin-top:1rem;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap">
+            <label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;font-weight:700">
+              <input type="checkbox" id="qz-publish" checked style="width:17px;height:17px"> Publish now (visible to students)
+            </label>
+            <button class="btn btn-green" onclick="qzSave()" id="qz-save-btn">💾 Save quiz</button>
+            <button class="btn btn-red" onclick="qzResetEditor()">Cancel</button>
+            <div class="form-error" id="qz-error"></div>
+            <div class="form-success" id="qz-success"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🧠 Existing Quizzes <span id="qz-count" style="font-size:.68rem;color:var(--muted);font-weight:600"></span></div>
+      <div class="card-body">
+        <div id="qz-list"><div style="font-size:.78rem;color:var(--muted)">Loading…</div></div>
       </div>
     </div>
   </div>
@@ -288,12 +389,267 @@ async function deleteUser(id,name){
 }
 
 function showTab(id){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['users','create','link'][i]===id));
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['users','create','link','quizzes'][i]===id));
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+id));
+  if(id==='quizzes'&&!qzLoaded)qzLoadQuizzes();
 }
 
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
 async function doLogout(){await sb.auth.signOut();window.location.href='/';}
+</script>
+
+<!-- ═══ QUIZ ADMIN ═══ -->
+<script>
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';}
+const LTR=['A','B','C','D'];
+let qzLoaded=false, qzText='', qzSourceName='', qzDraft=[], qzEditId=null;
+
+// ── PDF → text (in browser) ────────────────────────────────
+async function qzHandleFile(e){
+  const file=e.target.files[0]; if(!file)return;
+  const st=document.getElementById('qz-status');
+  if(!window.pdfjsLib){st.textContent='⚠️ PDF reader failed to load. Add questions by hand instead.';document.getElementById('qz-parse-actions').style.display='flex';return;}
+  st.textContent='📖 Reading PDF…';
+  qzSourceName=file.name;
+  if(!document.getElementById('qz-title').value.trim())
+    document.getElementById('qz-title').value=file.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').trim();
+  try{
+    const buf=await file.arrayBuffer();
+    qzText=await qzExtract(buf);
+  }catch(err){st.textContent='⚠️ Could not read this PDF: '+err.message;return;}
+  st.textContent=`✅ Read ${qzText.length.toLocaleString()} characters. Now turn it into questions:`;
+  document.getElementById('qz-parse-actions').style.display='flex';
+  document.getElementById('qz-ai-hint').style.display='block';
+  qzAutoDetect(true);
+}
+async function qzExtract(buf){
+  const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  let out='';
+  for(let p=1;p<=pdf.numPages;p++){
+    const page=await pdf.getPage(p);
+    const c=await page.getTextContent();
+    c.items.forEach(it=>{ out+=it.str; out+=it.hasEOL?'\n':' '; });
+    out+='\n';
+  }
+  return out;
+}
+
+// ── Heuristic MCQ parser (no API needed) ───────────────────
+function qzLetterIdx(c){return {a:0,b:1,c:2,d:3}[c.toLowerCase()];}
+function qzParse(raw){
+  const lines=raw.replace(/\r/g,'').split('\n').map(l=>l.trim());
+  // Answer-key section (e.g. "Answers: 1. B  2) C ...") — must NOT match an
+  // inline "Answer: B" line (that's a per-question answer, handled below).
+  const keyMap={};
+  const keyIdx=lines.findIndex(l=>/^answer\s*key\b/i.test(l)||/^answers?\b[\s:\-]*(\d|$)/i.test(l));
+  if(keyIdx>=0){
+    const keyText=lines.slice(keyIdx).join('\n');
+    const keyRe=/\b(\d{1,3})\s*[\.\)\:\-]\s*([A-Da-d])\b/g; let m;
+    while((m=keyRe.exec(keyText))!==null){keyMap[+m[1]]=qzLetterIdx(m[2]);}
+  }
+  const optRe=/^[\(\[]?([A-Da-d])[\)\.\]]\s+(.+)$/;
+  const qNumRe=/^(\d{1,3})[\.\)]\s+(.+)$/;
+  const ansRe=/^(?:answer|ans|correct)\b\s*[:\-]?\s*[\(\[]?([A-Da-d])[\)\.\]]?/i;
+  const out=[]; let cur=null;
+  const flush=()=>{
+    if(cur&&cur.options.filter(o=>o).length>=2){
+      while(cur.options.length<4)cur.options.push('');
+      cur.options=cur.options.slice(0,4);
+      let ci=cur.ans; if(ci==null&&cur.num!=null&&keyMap[cur.num]!=null)ci=keyMap[cur.num];
+      out.push({question:cur.q.trim(),options:cur.options,correct_index:ci||0,explanation:''});
+    }
+    cur=null;
+  };
+  for(let i=0;i<lines.length;i++){
+    if(keyIdx>=0&&i>=keyIdx)break;
+    const line=lines[i]; if(!line)continue;
+    const am=line.match(ansRe);
+    if(am&&cur){cur.ans=qzLetterIdx(am[1]);continue;}
+    const om=line.match(optRe);
+    if(om&&cur&&cur.options.length<8){cur.options.push(om[2].trim());continue;}
+    const qn=line.match(qNumRe);
+    if(qn){flush();cur={q:qn[2],num:+qn[1],options:[],ans:null};continue;}
+    if(cur&&cur.options.length===0){cur.q+=' '+line;continue;} // wrapped question text (incl. lines ending in ?)
+    if(line.endsWith('?')){flush();cur={q:line,num:null,options:[],ans:null};continue;}
+  }
+  flush();
+  return out.filter(q=>q.question&&q.options.filter(o=>o).length>=2);
+}
+
+function qzAutoDetect(silent){
+  if(!qzText){showToast('Upload a PDF first');return;}
+  const parsed=qzParse(qzText);
+  if(!parsed.length){
+    if(!silent)showToast("Couldn't auto-detect questions — add them by hand or try Claude.");
+    if(!qzDraft.length){qzDraft=[qzBlank()];qzRenderEditor();}
+    return;
+  }
+  qzDraft=parsed; qzRenderEditor();
+  if(!silent)showToast(`🔍 Found ${parsed.length} question${parsed.length>1?'s':''}. Review and edit below.`);
+  else document.getElementById('qz-status').textContent=`✅ Auto-detected ${parsed.length} question${parsed.length>1?'s':''}. Review every one below before saving.`;
+}
+
+// ── Generate with Claude (optional edge function) ──────────
+async function qzGenerateAI(){
+  if(!qzText){showToast('Upload a PDF first');return;}
+  const btn=document.getElementById('qz-ai-btn');
+  btn.disabled=true; btn.textContent='✨ Asking Claude…';
+  const grade=parseInt(document.getElementById('qz-grade').value)||null;
+  try{
+    const {data,error}=await sb.functions.invoke('generate-quiz',{body:{text:qzText,count:12,grade}});
+    if(error){
+      let msg=error.message||'Edge function error';
+      try{const j=await error.context.json();if(j&&j.error)msg=j.error;}catch(_){}
+      document.getElementById('qz-status').textContent='⚠️ Claude generation unavailable: '+msg+' — using auto-detect / manual instead.';
+      showToast('Claude generation not available — see the note below.');
+      return;
+    }
+    if(!data||!data.questions||!data.questions.length){showToast('Claude returned no questions — try auto-detect.');return;}
+    qzDraft=data.questions.map(q=>({question:q.question||'',options:(q.options||['','','','']).slice(0,4),correct_index:q.correct_index||0,explanation:q.explanation||''}));
+    qzDraft.forEach(q=>{while(q.options.length<4)q.options.push('');});
+    qzRenderEditor();
+    showToast(`✨ Claude drafted ${qzDraft.length} questions. Review before publishing.`);
+  }finally{
+    btn.disabled=false; btn.textContent='✨ Generate with Claude';
+  }
+}
+
+// ── Editor ─────────────────────────────────────────────────
+function qzBlank(){return {question:'',options:['','','',''],correct_index:0,explanation:''};}
+function qzAddBlank(){qzDraft.push(qzBlank());qzRenderEditor();
+  const ed=document.getElementById('qz-editor');ed.scrollIntoView({behavior:'smooth',block:'end'});}
+function qzDel(i){qzDraft.splice(i,1);if(!qzDraft.length)qzDraft=[qzBlank()];qzRenderEditor();}
+function qzSet(i,k,v){qzDraft[i][k]=v;}
+function qzSetOpt(i,k,v){qzDraft[i].options[k]=v;}
+function qzSetCorrect(i,k){qzDraft[i].correct_index=k;qzRenderEditor();}
+function qzRenderEditor(){
+  document.getElementById('qz-editor').style.display='block';
+  document.getElementById('qz-questions').innerHTML=qzDraft.map((q,qi)=>`
+    <div class="q-edit">
+      <div class="q-edit-head"><span class="qn">Question ${qi+1}</span>
+        <button class="btn btn-red btn-sm" onclick="qzDel(${qi})">Delete</button></div>
+      <textarea rows="2" placeholder="Question text" oninput="qzSet(${qi},'question',this.value)">${qzE(q.question)}</textarea>
+      ${[0,1,2,3].map(k=>`
+        <div class="opt-edit">
+          <input type="radio" name="cor-${qi}" ${q.correct_index===k?'checked':''} onchange="qzSetCorrect(${qi},${k})" title="Correct answer">
+          <span class="lt">${LTR[k]}</span>
+          <input type="text" class="${q.correct_index===k?'is-correct':''}" value="${qzE(q.options[k]||'')}" placeholder="Option ${LTR[k]}" oninput="qzSetOpt(${qi},${k},this.value)">
+        </div>`).join('')}
+      <div class="correct-hint">🟢 The green option is marked correct. Click a radio to change it.</div>
+      <input class="q-expl" type="text" value="${qzE(q.explanation||'')}" placeholder="Explanation shown after answering (optional)" oninput="qzSet(${qi},'explanation',this.value)">
+    </div>`).join('');
+}
+function qzResetEditor(){
+  qzDraft=[];qzEditId=null;qzText='';qzSourceName='';
+  document.getElementById('qz-editor').style.display='none';
+  document.getElementById('qz-parse-actions').style.display='none';
+  document.getElementById('qz-ai-hint').style.display='none';
+  document.getElementById('qz-questions').innerHTML='';
+  document.getElementById('qz-status').textContent='';
+  document.getElementById('qz-title').value='';
+  document.getElementById('qz-desc').value='';
+  document.getElementById('qz-grade').value='';
+  document.getElementById('qz-file').value='';
+  document.getElementById('qz-publish').checked=true;
+  document.getElementById('qz-editor-title').textContent='📤 Upload a Quiz PDF';
+  document.getElementById('qz-error').classList.remove('show');
+  document.getElementById('qz-success').classList.remove('show');
+}
+
+// ── Save ───────────────────────────────────────────────────
+async function qzSave(){
+  const err=document.getElementById('qz-error'), ok=document.getElementById('qz-success');
+  err.classList.remove('show'); ok.classList.remove('show');
+  const title=document.getElementById('qz-title').value.trim();
+  const description=document.getElementById('qz-desc').value.trim()||null;
+  const grade=parseInt(document.getElementById('qz-grade').value)||null;
+  const publish=document.getElementById('qz-publish').checked;
+  const fail=(m)=>{err.textContent=m;err.classList.add('show');};
+  if(!title)return fail('Give the quiz a title.');
+  if(!qzDraft.length)return fail('Add at least one question.');
+  for(let i=0;i<qzDraft.length;i++){
+    const q=qzDraft[i];
+    if(!q.question.trim())return fail(`Question ${i+1} is empty.`);
+    if(q.options.some(o=>!o.trim()))return fail(`Question ${i+1} needs all 4 options filled in.`);
+    if(q.correct_index<0||q.correct_index>3)return fail(`Question ${i+1} has no correct answer marked.`);
+  }
+  const btn=document.getElementById('qz-save-btn');btn.disabled=true;btn.textContent='Saving…';
+  try{
+    const row={title,description,grade,source_file:qzSourceName||null,created_by:profile.id,created_by_name:profile.name,is_published:publish};
+    let quizId=qzEditId;
+    if(qzEditId){
+      const {error:ue}=await sb.from('quizzes').update(row).eq('id',qzEditId);
+      if(ue)return fail(ue.message);
+      await sb.from('quiz_questions').delete().eq('quiz_id',qzEditId);
+    }else{
+      const {data,error:ie}=await sb.from('quizzes').insert(row).select().single();
+      if(ie)return fail(ie.message);
+      quizId=data.id;
+    }
+    const qrows=qzDraft.map((q,i)=>({quiz_id:quizId,position:i,question:q.question.trim(),options:q.options.map(o=>o.trim()),correct_index:q.correct_index,explanation:(q.explanation||'').trim()||null}));
+    const {error:qe}=await sb.from('quiz_questions').insert(qrows);
+    if(qe)return fail('Questions could not be saved: '+qe.message);
+    ok.textContent=`✅ "${title}" saved with ${qrows.length} questions${publish?' and published':' (draft)'}.`;ok.classList.add('show');
+    showToast('🧠 Quiz saved!');
+    qzResetEditor();
+    await qzLoadQuizzes();
+  }finally{btn.disabled=false;btn.textContent='💾 Save quiz';}
+}
+
+// ── Existing quizzes ───────────────────────────────────────
+async function qzLoadQuizzes(){
+  qzLoaded=true;
+  const el=document.getElementById('qz-list');
+  const {data:qz,error}=await sb.from('quizzes').select('*').order('created_at',{ascending:false});
+  if(error){el.innerHTML=`<div class="form-error show">${error.message}</div>`;return;}
+  const {data:qq}=await sb.from('quiz_questions').select('quiz_id');
+  const counts={};(qq||[]).forEach(r=>counts[r.quiz_id]=(counts[r.quiz_id]||0)+1);
+  const {data:at}=await sb.from('quiz_attempts').select('id,quiz_id');
+  const acount={};(at||[]).forEach(r=>acount[r.quiz_id]=(acount[r.quiz_id]||0)+1);
+  document.getElementById('qz-count').textContent=`— ${(qz||[]).length}`;
+  if(!qz||!qz.length){el.innerHTML='<div style="font-size:.8rem;color:var(--muted)">No quizzes yet. Upload a PDF above to create your first one.</div>';return;}
+  el.innerHTML=qz.map(q=>`
+    <div class="qz-item">
+      <div>
+        <div class="qz-t">${qzE(q.title)}</div>
+        <div class="qz-sub">${counts[q.id]||0} questions · ${acount[q.id]||0} attempts${q.grade?' · Grade '+q.grade:''}</div>
+      </div>
+      <span class="qz-pub ${q.is_published?'on':'off'}">${q.is_published?'Published':'Draft'}</span>
+      <span class="spacer"></span>
+      <button class="btn btn-outline btn-sm" onclick="qzEdit('${q.id}')">Edit</button>
+      <button class="btn btn-blue btn-sm" onclick="qzTogglePublish('${q.id}',${q.is_published})">${q.is_published?'Unpublish':'Publish'}</button>
+      <button class="btn btn-red btn-sm" onclick="qzDelete('${q.id}','${qzE(q.title).replace(/'/g,'')}')">Delete</button>
+    </div>`).join('');
+}
+async function qzTogglePublish(id,cur){
+  await sb.from('quizzes').update({is_published:!cur}).eq('id',id);
+  showToast(!cur?'✅ Published':'Hidden from students');
+  qzLoadQuizzes();
+}
+async function qzDelete(id,title){
+  if(!confirm(`Delete "${title}" and all its questions and attempts? This cannot be undone.`))return;
+  const {error}=await sb.from('quizzes').delete().eq('id',id);
+  if(error){showToast('Delete failed: '+error.message);return;}
+  showToast('🗑 Quiz deleted');
+  qzLoadQuizzes();
+}
+async function qzEdit(id){
+  const {data:q}=await sb.from('quizzes').select('*').eq('id',id).single();
+  const {data:qs}=await sb.from('quiz_questions').select('*').eq('quiz_id',id).order('position',{ascending:true});
+  if(!q){showToast('Could not load quiz');return;}
+  qzEditId=id; qzSourceName=q.source_file||'';
+  document.getElementById('qz-title').value=q.title||'';
+  document.getElementById('qz-desc').value=q.description||'';
+  document.getElementById('qz-grade').value=q.grade||'';
+  document.getElementById('qz-publish').checked=!!q.is_published;
+  document.getElementById('qz-editor-title').textContent='✏️ Editing: '+q.title;
+  qzDraft=(qs||[]).map(x=>({question:x.question,options:(x.options||['','','','']).slice(0,4),correct_index:x.correct_index,explanation:x.explanation||''}));
+  qzDraft.forEach(x=>{while(x.options.length<4)x.options.push('');});
+  if(!qzDraft.length)qzDraft=[qzBlank()];
+  qzRenderEditor();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function qzE(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 </script>
 </body>
 </html>
