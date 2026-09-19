@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find a Teacher — Availability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+.filters{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.1rem 1.2rem;margin-bottom:1.2rem}
+.filter-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.65rem}
+@media(max-width:760px){.filter-grid{grid-template-columns:1fr 1fr}}
+.filter-foot{display:flex;align-items:center;gap:1rem;margin-top:.85rem;flex-wrap:wrap}
+.count{font-size:.82rem;color:var(--muted);font-weight:600}
+.chk{display:flex;align-items:center;gap:.4rem;font-size:.82rem;font-weight:600;cursor:pointer}
+.chk input{width:auto}
+.clear{margin-left:auto}
+.teacher{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem}
+.t-head{background:linear-gradient(135deg,#1d2939,#344054);color:#fff;padding:.95rem 1.2rem;display:flex;align-items:center;gap:.85rem}
+.t-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand-2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.05rem;flex-shrink:0}
+.t-name{font-size:1.12rem;font-weight:800;letter-spacing:-.01em}
+.t-subjects{font-size:.76rem;color:#cdd3df;margin-top:.1rem}
+.t-slots{padding:.4rem 1.2rem 1rem}
+.srow{display:flex;align-items:center;gap:.9rem;padding:.7rem 0;border-bottom:1px solid #f0f2f6}
+.srow:last-child{border-bottom:none}
+.s-day{min-width:82px}
+.sd-n{font-weight:800;font-size:.82rem;color:var(--brand)}
+.s-time{font-size:.74rem;color:var(--muted)}
+.s-info{flex:1;min-width:0}
+.s-note{font-size:.76rem;color:var(--muted);margin-top:.25rem}
+.s-status{font-size:.68rem;font-weight:800;padding:4px 11px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+.st-open{background:var(--green-bg);color:var(--green)}
+.st-booked{background:var(--red-bg);color:var(--red)}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="brand"><span class="dot">📚</span> TeachTime</div>
+  <div class="nav-right">
+    <a class="btn btn-ghost btn-sm" href="/teacher">Teacher login →</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <h1>Find a teacher</h1>
+    <p>Search teacher availability by name, grade, or subject. No account needed — just browse open class times.</p>
+  </div>
+
+  <div class="filters">
+    <div class="filter-grid">
+      <div>
+        <label for="q-name">Teacher name</label>
+        <input id="q-name" placeholder="Type a name…" autocomplete="off">
+      </div>
+      <div>
+        <label for="q-grade">Grade</label>
+        <select id="q-grade"><option value="">Any grade</option></select>
+      </div>
+      <div>
+        <label for="q-subject">Subject</label>
+        <select id="q-subject"><option value="">Any subject</option></select>
+      </div>
+      <div>
+        <label for="q-day">Day</label>
+        <select id="q-day">
+          <option value="">Any day</option>
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-foot">
+      <label class="chk"><input type="checkbox" id="q-open"> Open slots only</label>
+      <span class="count" id="count"></span>
+      <button class="btn btn-ghost btn-sm clear" onclick="clearFilters()">Clear filters</button>
+    </div>
+  </div>
+
+  <div id="results"><div class="empty">Loading availability…</div></div>
+</div>
+
+<script>
+const DAY_ORDER={Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6,Sunday:7};
+let debounce;
+
+// grade filter 1–12
+{const g=document.getElementById('q-grade');for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent='Grade '+i;g.appendChild(o);}}
+
+['q-name'].forEach(id=>document.getElementById(id).addEventListener('input',()=>{clearTimeout(debounce);debounce=setTimeout(load,180);}));
+['q-grade','q-subject','q-day','q-open'].forEach(id=>document.getElementById(id).addEventListener('change',load));
+
+async function load(){
+  const p=new URLSearchParams();
+  const name=document.getElementById('q-name').value.trim();
+  const grade=document.getElementById('q-grade').value;
+  const subject=document.getElementById('q-subject').value;
+  const day=document.getElementById('q-day').value;
+  if(name)p.set('name',name);
+  if(grade)p.set('grade',grade);
+  if(subject)p.set('subject',subject);
+  if(day)p.set('day',day);
+  if(document.getElementById('q-open').checked)p.set('open','1');
+  let data;
+  try{ data=await (await fetch('/api/availability?'+p.toString())).json(); }
+  catch{ document.getElementById('results').innerHTML='<div class="empty">⚠️ Could not reach the server.</div>'; return; }
+  fillSubjects(data.subjects||[]);
+  render(data.slots||[]);
+}
+
+let subjectsFilled=false;
+function fillSubjects(subs){
+  if(subjectsFilled)return; subjectsFilled=true;
+  const sel=document.getElementById('q-subject');
+  subs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+function render(slots){
+  const nT=new Set(slots.map(s=>s.teacher_id)).size;
+  document.getElementById('count').textContent=
+    `${slots.length} slot${slots.length===1?'':'s'} · ${nT} teacher${nT===1?'':'s'}`;
+  const box=document.getElementById('results');
+  if(slots.length===0){box.innerHTML='<div class="empty">No teachers match your search. Try clearing some filters.</div>';return;}
+  const byT={};
+  slots.forEach(s=>{(byT[s.teacher_id]=byT[s.teacher_id]||{name:s.teacher_name,slots:[]}).slots.push(s);});
+  box.innerHTML=Object.values(byT).sort((a,b)=>a.name.localeCompare(b.name)).map(t=>{
+    const subs=[...new Set(t.slots.map(s=>s.subject))].join(' · ');
+    const initials=t.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const rows=t.slots
+      .sort((a,b)=>(DAY_ORDER[a.day_of_week]-DAY_ORDER[b.day_of_week])||a.start_time.localeCompare(b.start_time))
+      .map(s=>`
+        <div class="srow">
+          <div class="s-day"><div class="sd-n">${s.day_of_week.slice(0,3)}</div><div class="s-time">${s.start_time}–${s.end_time}</div></div>
+          <div class="s-info">
+            <span class="pill pill-sub">${esc(s.subject)}</span>
+            <span class="pill pill-grade">${s.grade?('Grade '+s.grade):'All grades'}</span>
+            <span class="pill pill-mode">${esc(s.mode)}</span>
+            ${s.notes?`<div class="s-note">📝 ${esc(s.notes)}</div>`:''}
+          </div>
+          <span class="s-status ${s.status==='open'?'st-open':'st-booked'}">${s.status==='open'?'Open':'Booked'}</span>
+        </div>`).join('');
+    return `<div class="teacher">
+      <div class="t-head"><div class="t-avatar">${initials}</div>
+        <div><div class="t-name">${esc(t.name)}</div><div class="t-subjects">${esc(subs)}</div></div></div>
+      <div class="t-slots">${rows}</div></div>`;
+  }).join('');
+}
+
+function clearFilters(){
+  document.getElementById('q-name').value='';
+  document.getElementById('q-grade').value='';
+  document.getElementById('q-subject').value='';
+  document.getElementById('q-day').value='';
+  document.getElementById('q-open').checked=false;
+  load();
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+load();
+</script>
+</body>
+</html>

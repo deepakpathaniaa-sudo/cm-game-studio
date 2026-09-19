@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teacher — My Availability</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<style>
+/* auth screen */
+.auth-wrap{max-width:420px;margin:3.2rem auto;padding:0 1rem}
+.auth-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.6rem 1.6rem}
+.auth-tabs{display:flex;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:1.2rem}
+.auth-tab{flex:1;border:none;background:transparent;padding:.55rem;border-radius:8px;font-family:var(--font);font-weight:700;font-size:.85rem;color:var(--muted);cursor:pointer}
+.auth-tab.on{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(16,24,40,.08)}
+.auth-card h1{font-size:1.25rem;margin-bottom:.2rem;letter-spacing:-.02em}
+.auth-card .sub{font-size:.85rem;color:var(--muted);margin-bottom:.4rem}
+/* dashboard */
+.grid{display:grid;grid-template-columns:350px 1fr;gap:1.3rem;align-items:start}
+@media(max-width:840px){.grid{grid-template-columns:1fr}}
+.slot{border:1px solid var(--border);border-radius:12px;padding:.85rem .95rem;margin-bottom:.75rem;display:flex;align-items:flex-start;gap:.85rem}
+.slot.booked{background:var(--red-bg);border-color:#fbcfc9}
+.slot-day{min-width:52px;text-align:center;background:var(--bg);border-radius:9px;padding:.45rem .3rem}
+.sd-name{font-size:.66rem;font-weight:800;text-transform:uppercase;color:var(--brand)}
+.slot-body{flex:1;min-width:0}
+.slot-time{font-weight:800;font-size:1rem}
+.slot-meta{font-size:.78rem;color:var(--muted);margin-top:.3rem}
+.slot-actions{display:flex;flex-direction:column;gap:.35rem}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH (shown when logged out) ══ -->
+<div id="auth" style="display:none">
+  <div class="nav">
+    <div class="brand"><span class="dot">📚</span> TeachTime</div>
+    <div class="nav-right"><a class="btn btn-ghost btn-sm" href="/">← Parent view</a></div>
+  </div>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab on" id="tab-login" onclick="setMode('login')">Log in</button>
+        <button class="auth-tab" id="tab-register" onclick="setMode('register')">Create account</button>
+      </div>
+      <h1 id="auth-title">Welcome back</h1>
+      <div class="sub" id="auth-sub">Log in to manage your class availability.</div>
+
+      <div id="f-name-wrap" style="display:none">
+        <label for="f-name">Full name</label>
+        <input id="f-name" placeholder="e.g. Priya Sharma" autocomplete="name">
+      </div>
+      <div id="f-subjects-wrap" style="display:none">
+        <label for="f-subjects">Subjects you teach <span style="text-transform:none;font-weight:500">(comma-separated)</span></label>
+        <input id="f-subjects" placeholder="Math, Science" autocomplete="off">
+      </div>
+      <label for="f-email">Email</label>
+      <input id="f-email" type="email" placeholder="you@example.com" autocomplete="email">
+      <label for="f-password">Password</label>
+      <input id="f-password" type="password" placeholder="••••••••" autocomplete="current-password">
+
+      <div class="err" id="auth-err"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:1.1rem" id="auth-btn" onclick="submitAuth()">Log in</button>
+      <div class="hint" id="auth-switch">New here? <a href="#" onclick="setMode('register');return false" style="color:var(--brand);font-weight:700">Create an account</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD (shown when logged in) ══ -->
+<div id="dash" style="display:none">
+  <div class="nav">
+    <div class="brand"><span class="dot">📚</span> TeachTime</div>
+    <div class="nav-right">
+      <a class="btn btn-ghost btn-sm" href="/" target="_blank">👁 Parent view</a>
+      <span class="nav-name" id="nav-name"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="hero">
+      <h1>My availability</h1>
+      <p>Add the weekly slots you can teach. Parents can find these by your name, grade, or subject — no login needed on their side.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <h2 id="form-title">➕ Add a slot</h2>
+        <input type="hidden" id="edit-id">
+        <label for="s-subject">Subject</label>
+        <input id="s-subject" list="subject-list" placeholder="e.g. Math" autocomplete="off">
+        <datalist id="subject-list"></datalist>
+        <div class="row2">
+          <div>
+            <label for="s-grade">Grade</label>
+            <select id="s-grade"><option value="">All grades</option></select>
+          </div>
+          <div>
+            <label for="s-day">Day</label>
+            <select id="s-day">
+              <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+              <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div><label for="s-start">Start</label><input type="time" id="s-start" value="16:00"></div>
+          <div><label for="s-end">End</label><input type="time" id="s-end" value="17:00"></div>
+        </div>
+        <div class="row2">
+          <div><label for="s-mode">Mode</label><select id="s-mode"><option>Online</option><option>In-person</option></select></div>
+          <div><label for="s-status">Status</label><select id="s-status"><option value="open">Open</option><option value="booked">Booked</option></select></div>
+        </div>
+        <label for="s-notes">Notes <span style="text-transform:none;font-weight:500">(optional)</span></label>
+        <textarea id="s-notes" placeholder="e.g. Focus on fractions & word problems"></textarea>
+        <div class="err" id="slot-err"></div>
+        <button class="btn btn-primary" style="width:100%;margin-top:1rem" id="save-btn" onclick="saveSlot()">Save slot</button>
+        <button class="btn btn-ghost" style="width:100%;margin-top:.5rem;display:none" id="cancel-btn" onclick="resetForm()">Cancel edit</button>
+        <div class="hint">Slots repeat weekly until you remove them.</div>
+      </div>
+
+      <div class="card">
+        <h2>📋 My weekly slots</h2>
+        <div id="slots"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DAY_ORDER={Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6,Sunday:7};
+let mode='login', me=null, slots=[];
+
+// grade options 1–12
+{const g=document.getElementById('s-grade');for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent='Grade '+i;g.appendChild(o);}}
+
+async function api(url,opts){
+  const r=await fetch(url,Object.assign({headers:{'Content-Type':'application/json'}},opts));
+  let body={}; try{body=await r.json();}catch{}
+  if(!r.ok) throw new Error(body.error||('Error '+r.status));
+  return body;
+}
+
+// ---- boot: are we logged in? ----
+(async()=>{
+  try{ const {teacher}=await api('/api/me'); if(teacher){me=teacher;showDash();return;} }catch{}
+  showAuth();
+})();
+
+function showAuth(){document.getElementById('auth').style.display='block';document.getElementById('dash').style.display='none';}
+function showDash(){
+  document.getElementById('auth').style.display='none';
+  document.getElementById('dash').style.display='block';
+  document.getElementById('nav-name').textContent=me.name;
+  if(me.subjects&&me.subjects.length){
+    const dl=document.getElementById('subject-list');
+    dl.innerHTML=me.subjects.map(s=>`<option>${esc(s)}</option>`).join('');
+    if(!document.getElementById('s-subject').value)document.getElementById('s-subject').value=me.subjects[0];
+  }
+  loadSlots();
+}
+
+// ---- auth UI ----
+function setMode(m){
+  mode=m;
+  document.getElementById('tab-login').classList.toggle('on',m==='login');
+  document.getElementById('tab-register').classList.toggle('on',m==='register');
+  document.getElementById('f-name-wrap').style.display=m==='register'?'block':'none';
+  document.getElementById('f-subjects-wrap').style.display=m==='register'?'block':'none';
+  document.getElementById('auth-title').textContent=m==='register'?'Create your account':'Welcome back';
+  document.getElementById('auth-sub').textContent=m==='register'
+    ?'Sign up to publish your class availability.':'Log in to manage your class availability.';
+  document.getElementById('auth-btn').textContent=m==='register'?'Create account':'Log in';
+  document.getElementById('f-password').setAttribute('autocomplete',m==='register'?'new-password':'current-password');
+  document.getElementById('auth-switch').innerHTML=m==='register'
+    ?'Already have an account? <a href="#" onclick="setMode(\'login\');return false" style="color:var(--brand);font-weight:700">Log in</a>'
+    :'New here? <a href="#" onclick="setMode(\'register\');return false" style="color:var(--brand);font-weight:700">Create an account</a>';
+  hideErr('auth-err');
+}
+
+async function submitAuth(){
+  hideErr('auth-err');
+  const email=document.getElementById('f-email').value.trim();
+  const password=document.getElementById('f-password').value;
+  const btn=document.getElementById('auth-btn');btn.disabled=true;
+  try{
+    let res;
+    if(mode==='register'){
+      res=await api('/api/auth/register',{method:'POST',body:JSON.stringify({
+        name:document.getElementById('f-name').value.trim(),
+        subjects:document.getElementById('f-subjects').value,
+        email,password
+      })});
+    }else{
+      res=await api('/api/auth/login',{method:'POST',body:JSON.stringify({email,password})});
+    }
+    me=res.teacher; showDash();
+  }catch(e){ showErr('auth-err',e.message); }
+  finally{ btn.disabled=false; }
+}
+
+async function logout(){ try{await api('/api/auth/logout',{method:'POST'});}catch{} me=null; showAuth(); }
+
+// ---- slots ----
+async function loadSlots(){
+  try{
+    const {slots:data}=await api('/api/my-slots');
+    slots=data.sort((a,b)=>(DAY_ORDER[a.day_of_week]-DAY_ORDER[b.day_of_week])||a.start_time.localeCompare(b.start_time));
+    renderSlots();
+  }catch(e){ document.getElementById('slots').innerHTML=`<div class="empty">⚠️ ${esc(e.message)}</div>`; }
+}
+
+function renderSlots(){
+  const box=document.getElementById('slots');
+  if(slots.length===0){box.innerHTML='<div class="empty">No slots yet. Add your first one on the left. 👈</div>';return;}
+  box.innerHTML=slots.map(s=>`
+    <div class="slot ${s.status==='booked'?'booked':''}">
+      <div class="slot-day"><div class="sd-name">${s.day_of_week.slice(0,3)}</div></div>
+      <div class="slot-body">
+        <div class="slot-time">${s.start_time}–${s.end_time}</div>
+        <div style="margin:.4rem 0 0">
+          <span class="pill pill-sub">${esc(s.subject)}</span>
+          <span class="pill pill-grade">${s.grade?('Grade '+s.grade):'All grades'}</span>
+          <span class="pill pill-mode">${esc(s.mode)}</span>
+          <span class="pill ${s.status==='booked'?'pill-booked':'pill-open'}">${s.status}</span>
+        </div>
+        ${s.notes?`<div class="slot-meta">📝 ${esc(s.notes)}</div>`:''}
+      </div>
+      <div class="slot-actions">
+        <button class="btn btn-ghost btn-sm" onclick="editSlot('${s.id}')">✏️ Edit</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleStatus('${s.id}')">${s.status==='open'?'📌 Booked':'✅ Open'}</button>
+        <button class="btn btn-danger btn-sm" onclick="removeSlot('${s.id}')">🗑 Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function readForm(){
+  const gradeVal=document.getElementById('s-grade').value;
+  return {
+    subject:document.getElementById('s-subject').value.trim(),
+    grade:gradeVal||null,
+    day_of_week:document.getElementById('s-day').value,
+    start_time:document.getElementById('s-start').value,
+    end_time:document.getElementById('s-end').value,
+    mode:document.getElementById('s-mode').value,
+    status:document.getElementById('s-status').value,
+    notes:document.getElementById('s-notes').value.trim()
+  };
+}
+
+async function saveSlot(){
+  hideErr('slot-err');
+  const rec=readForm();
+  const id=document.getElementById('edit-id').value;
+  const btn=document.getElementById('save-btn');btn.disabled=true;
+  try{
+    if(id) await api('/api/slots/'+id,{method:'PUT',body:JSON.stringify(rec)});
+    else   await api('/api/slots',{method:'POST',body:JSON.stringify(rec)});
+    toast(id?'Slot updated':'Slot added');
+    resetForm(); await loadSlots();
+  }catch(e){ showErr('slot-err',e.message); }
+  finally{ btn.disabled=false; }
+}
+
+function editSlot(id){
+  const s=slots.find(x=>x.id===id);if(!s)return;
+  document.getElementById('edit-id').value=s.id;
+  document.getElementById('s-subject').value=s.subject;
+  document.getElementById('s-grade').value=s.grade||'';
+  document.getElementById('s-day').value=s.day_of_week;
+  document.getElementById('s-start').value=s.start_time;
+  document.getElementById('s-end').value=s.end_time;
+  document.getElementById('s-mode').value=s.mode;
+  document.getElementById('s-status').value=s.status;
+  document.getElementById('s-notes').value=s.notes||'';
+  document.getElementById('form-title').textContent='✏️ Edit slot';
+  document.getElementById('save-btn').textContent='Update slot';
+  document.getElementById('cancel-btn').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetForm(){
+  document.getElementById('edit-id').value='';
+  document.getElementById('s-subject').value=(me&&me.subjects&&me.subjects[0])||'';
+  document.getElementById('s-grade').value='';
+  document.getElementById('s-notes').value='';
+  document.getElementById('s-status').value='open';
+  document.getElementById('form-title').textContent='➕ Add a slot';
+  document.getElementById('save-btn').textContent='Save slot';
+  document.getElementById('cancel-btn').style.display='none';
+  hideErr('slot-err');
+}
+
+async function toggleStatus(id){
+  const s=slots.find(x=>x.id===id);if(!s)return;
+  const rec={subject:s.subject,grade:s.grade,day_of_week:s.day_of_week,start_time:s.start_time,
+    end_time:s.end_time,mode:s.mode,status:s.status==='open'?'booked':'open',notes:s.notes};
+  try{ await api('/api/slots/'+id,{method:'PUT',body:JSON.stringify(rec)}); toast('Marked '+rec.status); await loadSlots(); }
+  catch(e){ toast(e.message); }
+}
+
+async function removeSlot(id){
+  if(!confirm('Delete this slot?'))return;
+  try{ await api('/api/slots/'+id,{method:'DELETE'}); toast('Slot deleted'); await loadSlots(); }
+  catch(e){ toast(e.message); }
+}
+
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.classList.add('show');}
+function hideErr(id){document.getElementById(id).classList.remove('show');}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+// submit auth on Enter
+['f-email','f-password','f-name','f-subjects'].forEach(id=>{
+  const el=document.getElementById(id);
+  el&&el.addEventListener('keydown',e=>{if(e.key==='Enter')submitAuth();});
+});
+</script>
+</body>
+</html>
