@@ -11,6 +11,8 @@ app.get('/student',    (_, res) => res.sendFile(pub('student.html')));
 app.get('/instructor', (_, res) => res.sendFile(pub('instructor.html')));
 app.get('/parent',     (_, res) => res.sendFile(pub('parent.html')));
 app.get('/admin',      (_, res) => res.sendFile(pub('admin.html')));
+app.get('/availability',   (_, res) => res.sendFile(pub('availability.html')));
+app.get('/find-teachers',  (_, res) => res.sendFile(pub('find-teachers.html')));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -21,4 +23,6 @@ app.listen(PORT, () => {
   console.log(`  Instructor: http://localhost:${PORT}/instructor`);
   console.log(`  Parent:     http://localhost:${PORT}/parent`);
   console.log(`  Admin:      http://localhost:${PORT}/admin`);
+  console.log(`  Availability (teacher):    http://localhost:${PORT}/availability`);
+  console.log(`  Find a Teacher (parent):   http://localhost:${PORT}/find-teachers`);
 });

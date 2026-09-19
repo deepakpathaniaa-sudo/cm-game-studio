@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find a Teacher — Concept Mastery</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--font:'Nunito',sans-serif;--display:'Fredoka One',cursive;--bg:#f0f4ff;--card:#fff;--border:#dde4f5;--text:#1a1a2e;--muted:#6b7280;--blue:#1A5EAB;--gold:#E8A020;--green:#2D8A3E;--red:#C0392B;--purple:#6C3FA0;--radius:14px}
+html,body{min-height:100%;font-family:var(--font);background:var(--bg);color:var(--text)}
+.topbar{background:var(--blue);padding:.7rem 1.4rem;display:flex;align-items:center;gap:.85rem;box-shadow:0 2px 16px rgba(26,94,171,.35);flex-wrap:wrap}
+.topbar-logo{font-family:var(--display);color:#fff;font-size:1.1rem}
+.topbar-logo span{color:var(--gold)}
+.role-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.65rem;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:.7rem}
+.topbar-name{font-size:.78rem;color:rgba(255,255,255,.8);font-weight:700}
+.tb-link{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:.68rem;font-weight:800;padding:4px 10px;border-radius:20px;cursor:pointer;font-family:var(--font);text-decoration:none}
+.page{max-width:960px;margin:0 auto;padding:1.5rem 1rem}
+.hero{background:linear-gradient(135deg,var(--blue),#2d5fa0);border-radius:var(--radius);padding:1.4rem 1.6rem;color:#fff;margin-bottom:1.2rem}
+.hero h1{font-family:var(--display);font-size:1.6rem;margin-bottom:.25rem}
+.hero p{font-size:.82rem;opacity:.9}
+/* filters */
+.filters{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1.1rem}
+.filter-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.6rem}
+@media(max-width:760px){.filter-grid{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);margin-bottom:.28rem}
+input,select{width:100%;padding:.58rem .7rem;border:1.5px solid var(--border);border-radius:10px;font-family:var(--font);font-size:.85rem;background:#fff;color:var(--text)}
+.filter-foot{display:flex;align-items:center;gap:.8rem;margin-top:.75rem;flex-wrap:wrap}
+.count{font-size:.74rem;color:var(--muted);font-weight:700}
+.clear{margin-left:auto;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:.45rem .85rem;font-size:.72rem;font-weight:800;cursor:pointer;font-family:var(--font);color:var(--muted)}
+.chk{display:flex;align-items:center;gap:.35rem;font-size:.74rem;font-weight:700;color:var(--text);cursor:pointer}
+.chk input{width:auto}
+/* teacher cards */
+.teacher{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1rem}
+.t-head{background:linear-gradient(135deg,#1a1a2e,#2d3561);padding:.9rem 1.1rem;color:#fff;display:flex;align-items:center;gap:.8rem}
+.t-avatar{width:44px;height:44px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:1.2rem;flex-shrink:0}
+.t-name{font-family:var(--display);font-size:1.2rem}
+.t-subjects{font-size:.7rem;color:rgba(255,255,255,.7);margin-top:.1rem}
+.t-slots{padding:.7rem 1.1rem 1rem}
+.srow{display:flex;align-items:center;gap:.7rem;padding:.55rem 0;border-bottom:1px dashed var(--border)}
+.srow:last-child{border-bottom:none}
+.s-day{min-width:74px}
+.sd-name{font-size:.74rem;font-weight:900;color:var(--blue)}
+.s-time{font-size:.68rem;color:var(--muted)}
+.s-info{flex:1}
+.pill{display:inline-block;font-size:.6rem;font-weight:800;padding:2px 8px;border-radius:20px;margin-right:.3rem;text-transform:uppercase}
+.pill-sub{background:#EAF1FB;color:var(--blue)}
+.pill-grade{background:#fff5e0;color:var(--gold)}
+.pill-mode{background:#eef7f0;color:var(--green)}
+.s-status{font-size:.62rem;font-weight:900;padding:3px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+.st-open{background:#eef7f0;color:var(--green)}
+.st-booked{background:#fdecea;color:var(--red)}
+.s-note{font-size:.68rem;color:var(--muted);margin-top:.2rem}
+.empty{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);text-align:center;color:var(--muted);font-size:.85rem;padding:2.5rem 1rem}
+</style>
+</head>
+<body>
+<div id="boot-error" style="display:none;position:fixed;inset:0;background:#f0f4ff;z-index:9999;align-items:center;justify-content:center;font-family:'Nunito',sans-serif"></div>
+
+<div class="topbar">
+  <div class="topbar-logo">🎮 Game <span>Studio</span></div>
+  <span class="role-badge">🔎 Find a Teacher</span>
+  <div class="topbar-right">
+    <a class="tb-link" id="back-link" href="/parent">← Back</a>
+    <span class="topbar-name" id="tb-name"></span>
+    <button class="tb-link" onclick="doLogout()">Sign Out</button>
+  </div>
+</div>
+
+<div class="page">
+  <div class="hero">
+    <h1>🔎 Find a Teacher</h1>
+    <p>Search teacher availability by name, grade, or subject, and see open weekly slots.</p>
+  </div>
+
+  <div class="filters">
+    <div class="filter-grid">
+      <div>
+        <label>Teacher name</label>
+        <input id="q-name" placeholder="Type a name…" oninput="applyFilters()">
+      </div>
+      <div>
+        <label>Grade</label>
+        <select id="q-grade" onchange="applyFilters()"><option value="">Any grade</option></select>
+      </div>
+      <div>
+        <label>Subject</label>
+        <select id="q-subject" onchange="applyFilters()"><option value="">Any subject</option></select>
+      </div>
+      <div>
+        <label>Day</label>
+        <select id="q-day" onchange="applyFilters()">
+          <option value="">Any day</option>
+          <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+          <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-foot">
+      <label class="chk"><input type="checkbox" id="q-open" onchange="applyFilters()"> Open slots only</label>
+      <span class="count" id="count"></span>
+      <button class="clear" onclick="clearFilters()">Clear filters</button>
+    </div>
+  </div>
+
+  <div id="results"><div class="empty">Loading availability…</div></div>
+</div>
+
+<script>
+const SURL='https://xoxjcpbruryjcqonzwag.supabase.co';
+const SKEY='sb_publishable_Tu7LS4Mjd0YKmYVMIg4Gag_oK4ih9Se';
+const sb=window.supabase.createClient(SURL,SKEY);
+const DAY_ORDER={Monday:1,Tuesday:2,Wednesday:3,Thursday:4,Friday:5,Saturday:6,Sunday:7};
+
+let profile=null, all=[];
+
+function showBootError(email,msg){
+  const el=document.getElementById('boot-error');
+  el.style.display='flex';
+  el.innerHTML=`<div style="text-align:center;padding:3rem 1.5rem;max-width:380px">
+    <div style="font-size:3rem;margin-bottom:1rem">⚠️</div>
+    <h2 style="font-family:'Fredoka One',cursive;font-size:1.4rem;margin-bottom:.5rem;color:#1a1a2e">Access Problem</h2>
+    <p style="color:#6b7280;font-size:.85rem;line-height:1.6;margin-bottom:.5rem">${msg}</p>
+    <button onclick="sb.auth.signOut().then(()=>window.location.href='/')"
+      style="background:#1A5EAB;color:#fff;border:none;border-radius:10px;padding:.65rem 1.4rem;font-size:.85rem;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif">Sign Out</button>
+  </div>`;
+}
+
+// grade filter options 1–12
+{const g=document.getElementById('q-grade');for(let i=1;i<=12;i++){const o=document.createElement('option');o.value=i;o.textContent='Grade '+i;g.appendChild(o);}}
+
+(async()=>{
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session){window.location.href='/';return;}
+  const {data:{user}}=await sb.auth.getUser();
+  let p=null;
+  for(let i=0;i<8;i++){
+    const {data}=await sb.from('profiles').select('*').eq('id',user.id).single();
+    if(data){p=data;break;}
+    await new Promise(r=>setTimeout(r,600));
+  }
+  if(p){
+    profile=p;
+    document.getElementById('tb-name').textContent=p.name;
+    const routes={student:'/student',instructor:'/instructor',parent:'/parent',admin:'/admin'};
+    document.getElementById('back-link').href=routes[p.role]||'/';
+  }
+  await loadAll();
+})();
+
+async function loadAll(){
+  const {data,error}=await sb.from('teacher_availability').select('*');
+  if(error){
+    document.getElementById('results').innerHTML=
+      `<div class="empty">⚠️ Could not load availability.<br><span style="font-size:.72rem">${error.message}</span><br><br>
+       If the table is missing, an admin needs to run <strong>migrations/teacher_availability.sql</strong> in Supabase.</div>`;
+    return;
+  }
+  all=data||[];
+  buildSubjectOptions();
+  applyFilters();
+}
+
+function buildSubjectOptions(){
+  const subs=[...new Set(all.map(s=>s.subject).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const sel=document.getElementById('q-subject');
+  subs.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+function applyFilters(){
+  const name=document.getElementById('q-name').value.trim().toLowerCase();
+  const grade=document.getElementById('q-grade').value;
+  const subject=document.getElementById('q-subject').value;
+  const day=document.getElementById('q-day').value;
+  const openOnly=document.getElementById('q-open').checked;
+
+  const rows=all.filter(s=>{
+    if(name && !(s.teacher_name||'').toLowerCase().includes(name))return false;
+    // grade: a slot marked "all grades" (null) matches any grade query
+    if(grade && s.grade!==null && String(s.grade)!==grade)return false;
+    if(subject && s.subject!==subject)return false;
+    if(day && s.day_of_week!==day)return false;
+    if(openOnly && s.status!=='open')return false;
+    return true;
+  });
+
+  document.getElementById('count').textContent=
+    `${rows.length} slot${rows.length===1?'':'s'} · ${new Set(rows.map(r=>r.teacher_id)).size} teacher${new Set(rows.map(r=>r.teacher_id)).size===1?'':'s'}`;
+  render(rows);
+}
+
+function render(rows){
+  const box=document.getElementById('results');
+  if(rows.length===0){
+    box.innerHTML=all.length===0
+      ? '<div class="empty">No teachers have published availability yet.</div>'
+      : '<div class="empty">No slots match your search. Try clearing some filters.</div>';
+    return;
+  }
+  // group by teacher
+  const byTeacher={};
+  rows.forEach(s=>{(byTeacher[s.teacher_id]=byTeacher[s.teacher_id]||{name:s.teacher_name,slots:[]}).slots.push(s);});
+  const teachers=Object.values(byTeacher).sort((a,b)=>a.name.localeCompare(b.name));
+
+  box.innerHTML=teachers.map(t=>{
+    const subs=[...new Set(t.slots.map(s=>s.subject))].join(' · ');
+    const initials=t.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+    const slotHTML=t.slots
+      .sort((a,b)=>(DAY_ORDER[a.day_of_week]-DAY_ORDER[b.day_of_week])||a.start_time.localeCompare(b.start_time))
+      .map(s=>`
+        <div class="srow">
+          <div class="s-day"><div class="sd-name">${s.day_of_week.slice(0,3)}</div><div class="s-time">${s.start_time}–${s.end_time}</div></div>
+          <div class="s-info">
+            <span class="pill pill-sub">${esc(s.subject)}</span>
+            <span class="pill pill-grade">${s.grade?('Grade '+s.grade):'All grades'}</span>
+            <span class="pill pill-mode">${s.mode}</span>
+            ${s.notes?`<div class="s-note">📝 ${esc(s.notes)}</div>`:''}
+          </div>
+          <span class="s-status ${s.status==='open'?'st-open':'st-booked'}">${s.status==='open'?'Open':'Booked'}</span>
+        </div>`).join('');
+    return `<div class="teacher">
+      <div class="t-head">
+        <div class="t-avatar">${initials}</div>
+        <div><div class="t-name">${esc(t.name)}</div><div class="t-subjects">${esc(subs)}</div></div>
+      </div>
+      <div class="t-slots">${slotHTML}</div>
+    </div>`;
+  }).join('');
+}
+
+function clearFilters(){
+  document.getElementById('q-name').value='';
+  document.getElementById('q-grade').value='';
+  document.getElementById('q-subject').value='';
+  document.getElementById('q-day').value='';
+  document.getElementById('q-open').checked=false;
+  applyFilters();
+}
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+async function doLogout(){await sb.auth.signOut();window.location.href='/';}
+</script>
+</body>
+</html>
