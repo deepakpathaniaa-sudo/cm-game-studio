@@ -45,14 +45,28 @@ so only the server's **secret** key can read/write them — the browser never to
 4. **Deploy.** Vercel reads `vercel.json` and runs `server.js` as one Node function that serves
    both the pages and the API. Check `/(your-domain)/healthz` → should show `{"ok":true,"backend":"supabase"}`.
 
-CLI alternative:
+### Deploy from the CLI
+
+Fastest — a helper script does all of it (run it on your own machine; it needs your Vercel login):
+
+```bash
+cd teacher-availability
+./deploy.sh
+```
+
+It installs/uses the Vercel CLI, logs you in, links the project, sets `SUPABASE_URL`, prompts
+for `SUPABASE_SECRET_KEY` (hidden input), and deploys to production. Running from this folder
+makes it the project root, so no "Root Directory" setting is needed.
+
+Prefer to do it by hand:
 
 ```bash
 cd teacher-availability
 npm i -g vercel
-vercel link            # pick/create the project
-vercel env add SUPABASE_URL production
-vercel env add SUPABASE_SECRET_KEY production
+vercel login
+vercel link
+printf '%s' "https://cqzpzhdleqyrmedymypg.supabase.co" | vercel env add SUPABASE_URL production
+vercel env add SUPABASE_SECRET_KEY production   # paste the service_role secret when prompted
 vercel --prod
 ```
 
