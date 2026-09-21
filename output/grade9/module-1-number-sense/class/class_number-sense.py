@@ -136,7 +136,7 @@ def build():
         for lvl, stem, ans in qs:
             n += 1
             tagged = f"{stem}  <font color='#2D7DD2'><b>[{lvl}]</b></font>"
-            wp = 60 if lvl == "L3" else (46 if lvl == "L2" else 34)
+            wp = {"L1": 60, "L2": 95, "L3": 130}[lvl]  # generous open work space, no lines
             d.question(n, tagged, answer="work", work_pts=wp)
             answers.append((n, lvl, ans))
 

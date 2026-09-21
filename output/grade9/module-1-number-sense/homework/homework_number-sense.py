@@ -74,7 +74,7 @@ def build_questions():
                info_line="MTH1W · Homework — Independent Practice", name_date=True)
     d.start()
     d.learning_goal("Practise integers, exponent laws, fractions, roots, percents and ratios independently.")
-    d.body("Work each question on your own paper and show your steps. Levels: L1 fluency, "
+    d.body("Show your full working in the space provided under each question. Levels: L1 fluency, "
            "L2 application, L3 thinking. Full worked solutions are in the Answer Key.", ST_BODY, gap=12)
     last = None
     for i, (lvl, concept, stem, _sol) in enumerate(ITEMS, start=1):
@@ -83,7 +83,9 @@ def build_questions():
             d.heading(names[lvl], color=CM_BLUE)
             last = lvl
         tagged = f"{stem}  <font color='#2D7DD2'><b>[{concept}]</b></font>"
-        d.question(i, tagged, answer="none")
+        # open working space (no ruled lines), sized by level
+        wp = {"L1": 70, "L2": 100, "L3": 135}[lvl]
+        d.question(i, tagged, answer="work", work_pts=wp)
     return d.build()
 
 
