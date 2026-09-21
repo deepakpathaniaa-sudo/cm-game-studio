@@ -1,138 +1,117 @@
 #!/usr/bin/env python3
 """Concept Mastery — Grade 9 (MTH1W) Number Sense — CLASS COPY (guided).
 
-Original content. Layout/branding: skill-cm-layout-branding via _assets/cm_pdf.py.
-Every numeric answer is computed here (fractions/math) so the answer page cannot
-drift from the questions. Run: python3 class_number-sense.py
+Structure (per user revision): a short warm-up, then for EACH sub-topic one
+worked Example followed by 3–4 practice questions of varying complexity.
+No "I do / We do" labels. Answers on the final page(s). Open working space,
+no ruled lines. Curriculum tag: MTH1W. All answers computed in Python.
+Run: python3 class_number-sense.py
 """
 import os, sys
 from fractions import Fraction as F
-import math
 
 ASSETS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "_assets"))
 sys.path.insert(0, ASSETS)
-from cm_pdf import CMFlow, ST_BODY, ST_BODY_B, ST_LABEL, __version__
+from cm_pdf import CMFlow, ST_BODY, CM_BLUE, CM_MED_BLUE, __version__
 
 OUT = os.path.join(os.path.dirname(__file__), "class_number-sense.pdf")
 TOPIC = "Number Sense"
 SUBTITLE = "Integers · BEDMAS · Exponents · Fractions · Roots · Percent · Ratios"
 INFO = "MTH1W · Class — Guided Practice"
 
-# ── Guided-practice items: (level, stem, computed answer string) ─────────────
-def fr(f):  # pretty fraction
-    f = F(f)
-    return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else str(f.numerator)
+def fr(x):
+    x = F(x); return f"{x.numerator}/{x.denominator}" if x.denominator != 1 else str(x.numerator)
 
-GUIDED = [
-    ("L1", "Evaluate: (-8) + (-5) - (-3).",
-     f"{(-8)+(-5)-(-3)}"),
-    ("L1", "Simplify using exponent laws: 5<super>6</super> ÷ 5<super>2</super>. Leave the answer in exponent form.",
-     "5<super>6-2</super> = 5<super>4</super>"),
-    ("L1", "Evaluate: 3 + 4 × 2<super>2</super> - 10 ÷ 5.",
-     f"{3 + 4*2**2 - 10//5}  (3 + 16 - 2)"),
-    ("L1", "Write 0.35 as a fraction in lowest terms, then as a percent.",
-     f"{fr(F(35,100))} ; 35%"),
-    ("L2", "Evaluate: 2/3 - 1/4 + 5/6. Give the answer in lowest terms.",
-     f"{fr(F(2,3)-F(1,4)+F(5,6))}"),
-    ("L2", "Simplify: (2<super>3</super>)<super>2</super> × 2<super>0</super>. Give a single power of 2 and its value.",
-     f"2<super>6</super> × 1 = 2<super>6</super> = {2**6}"),
-    ("L2", "A jacket costs $80. It is discounted 15%, then 13% HST is added to the sale price. Find the final price.",
-     f"Sale 80×0.85 = $68.00; +13% → 68×1.13 = ${68*1.13:.2f}"),
-    ("L2", "Between which two consecutive whole numbers does √55 lie? Justify with two perfect squares.",
-     f"7 and 8, since 7<super>2</super>=49 < 55 < 64=8<super>2</super>"),
-    ("L2", "A recipe uses flour to sugar in the ratio 5 : 2. If 15 cups of flour are used, how much sugar is needed?",
-     f"15 ÷ 5 × 2 = {15//5*2} cups"),
-    ("L3", "A car travels 240 km in 3 hours, then 150 km in 2.5 hours. Find the average speed for the whole trip. Explain why it is not the average of the two speeds.",
-     f"(240+150)/(3+2.5) = 390/5.5 = {390/5.5:.1f} km/h. It weights by distance/time, not a simple mean of 80 and 60."),
-    ("L3", "Sam simplified 3<super>2</super> + 3<super>2</super> as 3<super>4</super>. Explain the error and give the correct value.",
-     "Error: exponents are only added when MULTIPLYING like bases. Here it is addition: 9 + 9 = 18, not 81."),
-    ("L3", "A number increased by 25% gives 90. Work backwards to find the original number, and check your answer.",
-     f"x×1.25 = 90 → x = 90/1.25 = {int(90/1.25)}. Check: 72×1.25 = 90 ✓"),
-]
-
-# ── worked ("I do") + partial ("we do") per sub-topic ────────────────────────
+# Per sub-topic: name, worked example (lines), and 3–4 (level, stem, answer) items.
 SUBTOPICS = [
     ("Integers",
-     ["Evaluate (-7) - (-2) + (-4).",
-      "Rewrite subtraction as adding the opposite: (-7) + (+2) + (-4).",
-      "Combine: (-7 + 2) = -5, then (-5) + (-4) = -9.",
-      "Answer: -9."],
-     ["We do — Evaluate (-9) + (+5) - (-6).",
-      "Rewrite: (-9) + (+5) + (____).",
-      "Combine step by step:  -9 + 5 = ____ , then ____ + 6 = ____.",
-      "Answer: ____."]),
+     ["Evaluate (-8) - (-3) + (-5).",
+      "Add the opposite: (-8) + (+3) + (-5).",
+      "Combine: (-8 + 3) = -5, then (-5) + (-5) = -10.   Answer: -10."],
+     [("L1", "Evaluate: (-6) + (-9).", f"{(-6)+(-9)}"),
+      ("L1", "Evaluate: (-15) - (-4).", f"{(-15)-(-4)}"),
+      ("L2", "Evaluate: (-3) × 4 + (-2) × (-5).", f"{(-3)*4+(-2)*(-5)}"),
+      ("L3", "At 6 a.m. the temperature was -4 °C. It rose 9 °C by noon, then fell 6 °C by evening. Find the evening temperature.",
+       f"-4 + 9 - 6 = {-4+9-6} °C")]),
     ("Order of Operations (BEDMAS)",
-     ["Evaluate 20 - 2 × (3 + 1)<super>2</super>.",
-      "Brackets first: (3 + 1) = 4.  Exponent: 4<super>2</super> = 16.",
-      "Multiply: 2 × 16 = 32.   Subtract: 20 - 32 = -12.",
-      "Answer: -12."],
-     ["We do — Evaluate 6 + 12 ÷ (5 - 2)<super>2</super>.",
-      "Brackets: (5 - 2) = ____ .  Exponent: ____<super>2</super> = ____ .",
-      "Divide: 12 ÷ ____ = ____ .   Add: 6 + ____ = ____ .",
-      "Answer: ____."]),
+     ["Evaluate 24 - 3 × (2 + 3)<super>2</super> ÷ 5.",
+      "Brackets: 2 + 3 = 5.  Exponent: 5<super>2</super> = 25.",
+      "3 × 25 = 75; 75 ÷ 5 = 15; 24 - 15 = 9.   Answer: 9."],
+     [("L1", "Evaluate: 8 + 6 × 2.", f"{8+6*2}"),
+      ("L2", "Evaluate: (7 - 2)<super>2</super> - 4 × 3.", f"{(7-2)**2-4*3}"),
+      ("L2", "Evaluate: 36 ÷ (2 + 4) + 5 × 2.", f"{36//(2+4)+5*2}"),
+      ("L3", "Evaluate: 50 - [3 + 2 × (4<super>2</super> - 10)].",
+       f"4<super>2</super>-10=6; 2×6=12; 3+12=15; 50-15 = {50-(3+2*(16-10))}")]),
     ("Exponent Rules",
-     ["Simplify (x<super>4</super> × x<super>3</super>) ÷ x<super>2</super>, x ≠ 0.",
-      "Product rule (add): x<super>4+3</super> = x<super>7</super>.",
-      "Quotient rule (subtract): x<super>7-2</super> = x<super>5</super>.",
-      "Answer: x<super>5</super>."],
-     ["We do — Simplify (a<super>2</super>)<super>3</super> × a<super>0</super>, a ≠ 0.",
-      "Power of a power (multiply): a<super>2×3</super> = a<super>____</super>.",
-      "Zero exponent: a<super>0</super> = ____ .",
-      "Combine: a<super>____</super> × ____ = a<super>____</super>."]),
+     ["Simplify (x<super>5</super> × x<super>2</super>) ÷ x<super>3</super>, x ≠ 0.",
+      "Product rule: x<super>5+2</super> = x<super>7</super>.  Quotient rule: x<super>7-3</super> = x<super>4</super>.",
+      "Answer: x<super>4</super>."],
+     [("L1", "Write as a single power: 4<super>3</super> × 4<super>2</super>.", "4<super>5</super>"),
+      ("L1", "Simplify, n ≠ 0: n<super>6</super> ÷ n<super>2</super>.", "n<super>4</super>"),
+      ("L2", "Evaluate: (2<super>3</super>)<super>2</super> × 2<super>0</super>.", f"2<super>6</super> × 1 = {2**6}"),
+      ("L3", "Explain why a<super>3</super> + a<super>3</super> ≠ a<super>6</super>, and give the correct simplified form.",
+       "Adding like terms adds coefficients, not exponents: a<super>3</super> + a<super>3</super> = 2a<super>3</super>.")]),
     ("Fractions — Four Operations",
-     ["Evaluate 3/4 ÷ 2/3 + 1/2.",
-      "Divide: multiply by the reciprocal → 3/4 × 3/2 = 9/8.",
-      "Common denominator with 1/2 = 4/8:  9/8 + 4/8 = 13/8.",
-      "Answer: 13/8 (or 1 5/8)."],
-     ["We do — Evaluate 5/6 - 1/4 × 2/3.",
-      "Multiplication before subtraction: 1/4 × 2/3 = ____ .",
-      "Common denominator for 5/6 and that product: LCD = ____ .",
-      "Subtract: ____ - ____ = ____ ."]),
+     ["Evaluate 5/6 - 1/3 × 3/4.",
+      "Multiply first: 1/3 × 3/4 = 1/4.",
+      "5/6 - 1/4, LCD 12: 10/12 - 3/12 = 7/12.   Answer: 7/12."],
+     [("L1", "Evaluate in lowest terms: 2/5 + 1/10.", f"{fr(F(2,5)+F(1,10))}"),
+      ("L1", "Evaluate in lowest terms: 3/4 × 8/9.", f"{fr(F(3,4)*F(8,9))}"),
+      ("L2", "Evaluate in lowest terms: 7/8 ÷ 3/4.", f"{fr(F(7,8)/F(3,4))}"),
+      ("L3", "Evaluate in lowest terms: 1/2 + 2/3 ÷ 4/3 - 1/6.",
+       f"÷ first: 2/3÷4/3 = 1/2; then 1/2 + 1/2 - 1/6 = {fr(F(1,2)+F(1,2)-F(1,6))}")]),
     ("Rational Numbers",
-     ["Order these from least to greatest: -0.6, -2/3, 0.5, -1/2.",
-      "Write all as decimals: -2/3 ≈ -0.667, -1/2 = -0.5.",
-      "Compare: -0.667 < -0.6 < -0.5 < 0.5.",
-      "Answer: -2/3, -0.6, -1/2, 0.5."],
-     ["We do — Order from least to greatest: -3/4, -0.7, 1/4, -1.",
-      "As decimals: -3/4 = ____ , 1/4 = ____ .",
-      "Place on a number line and compare the negatives first.",
-      "Answer: ____ , ____ , ____ , ____ ."]),
+     ["Order from least to greatest: -0.75, -2/3, -0.7, -5/6.",
+      "As decimals: -5/6 ≈ -0.833, -2/3 ≈ -0.667.",
+      "Order: -5/6 < -0.75 < -0.7 < -2/3."],
+     [("L1", "Which is larger: -3/4 or -2/3?", "-2/3 (since -0.667 > -0.75)"),
+      ("L2", "Order from least to greatest: -1.2, 3/4, -1/4, 1.5.", "-1.2, -1/4, 3/4, 1.5"),
+      ("L2", "Find a rational number between 1/3 and 1/2.", "e.g. 5/12 (the average of 1/3 and 1/2)"),
+      ("L3", "Is the sum of two negative rational numbers always negative? Explain with an example.",
+       "Yes. e.g. -1/2 + (-1/3) = -5/6 < 0; adding two negatives always gives a negative.")]),
     ("Square Roots & Irrationals",
-     ["Is √50 rational or irrational? Estimate it to one decimal place.",
-      "50 is not a perfect square, so √50 is irrational.",
-      "49 = 7<super>2</super> and 64 = 8<super>2</super>, so √50 is just above 7.",
-      "Estimate: √50 ≈ 7.1."],
-     ["We do — Is √0.16 rational? Find its exact value.",
-      "0.16 = 16/100, and √(16/100) = ____ / ____ .",
-      "Simplify: ____ = ____ (a terminating decimal).",
-      "So √0.16 is ____ (rational / irrational)."]),
+     ["Is √72 rational or irrational? Estimate it to one decimal place.",
+      "72 is not a perfect square → irrational.",
+      "8<super>2</super> = 64 and 9<super>2</super> = 81, so √72 ≈ 8.5."],
+     [("L1", "Evaluate: √121.", "11 (rational)"),
+      ("L1", "Between which two whole numbers does √40 lie?", "6 and 7 (36 < 40 < 49)"),
+      ("L2", "Classify each as rational or irrational: √16, √17, 0.25, π.",
+       "√16 rational, √17 irrational, 0.25 rational, π irrational"),
+      ("L3", "Explain why √2 cannot be written as a terminating or repeating decimal.",
+       "√2 is irrational — it is not a ratio of integers, so its decimal never terminates or repeats.")]),
     ("Fractions ↔ Decimals ↔ Percent",
-     ["Convert 7/8 to a decimal and a percent.",
-      "Divide: 7 ÷ 8 = 0.875.",
-      "Percent: 0.875 × 100 = 87.5%.",
-      "Answer: 0.875 = 87.5%."],
-     ["We do — Convert 3/20 to a decimal and a percent.",
-      "Make the denominator 100:  3/20 = ____/100.",
-      "Decimal: ____ .   Percent: ____ %.",
-      "Answer: 3/20 = ____ = ____ %."]),
+     ["Convert 3/8 to a decimal and a percent.",
+      "3 ÷ 8 = 0.375.",
+      "0.375 × 100 = 37.5%.   Answer: 0.375 = 37.5%."],
+     [("L1", "Write 0.6 as a fraction (lowest terms) and a percent.", f"{fr(F(6,10))} ; 60%"),
+      ("L1", "Write 45% as a fraction in lowest terms.", f"{fr(F(45,100))}"),
+      ("L2", "Order from least to greatest: 0.7, 3/5, 65%.", "3/5 (0.6), 65% (0.65), 0.7"),
+      ("L3", "A student scores 21/25 on a test. Write it as a percent and state whether it is above 80%.",
+       "21/25 = 84%; yes, 84% > 80%.")]),
     ("Applying Percents",
-     ["A $120 game is on sale for 20% off. Find the sale price.",
-      "Discount = 20% of 120 = 0.20 × 120 = $24.",
-      "Sale price = 120 - 24 = $96  (or 120 × 0.80 = $96).",
-      "Answer: $96."],
-     ["We do — A $250 tablet has 13% HST added. Find the total cost.",
-      "Tax = 13% of 250 = 0.13 × 250 = $____ .",
-      "Total = 250 + ____ = $____  (or 250 × 1.13 = $____).",
-      "Answer: $____."]),
+     ["A $90 item is discounted 30%. Find the sale price.",
+      "Discount = 0.30 × 90 = $27.",
+      "Sale price = 90 - 27 = $63  (or 90 × 0.70 = $63)."],
+     [("L1", "Find 15% of 200.", f"{int(0.15*200)}"),
+      ("L2", "A $45 shirt has 13% HST added. Find the total cost.", f"45 × 1.13 = ${45*1.13:.2f}"),
+      ("L2", "A population grows from 400 to 460. Find the percent increase.", "60 ÷ 400 = 15%"),
+      ("L3", "After a 20% discount a game costs $72. Work backwards to find the original price.",
+       f"0.80 × p = 72 → p = 72 ÷ 0.80 = ${int(72/0.8)}")]),
     ("Ratios, Rates & Proportions",
-     ["500 g of cereal costs $3.20. Find the unit rate in $/100 g.",
-      "Per gram: 3.20 ÷ 500 = $0.0064/g.",
-      "Per 100 g: 0.0064 × 100 = $0.64/100 g.",
-      "Answer: $0.64 per 100 g."],
-     ["We do — 3 notebooks cost $7.50. Find the cost of 7 notebooks.",
-      "Unit rate: 7.50 ÷ 3 = $____ each.",
-      "For 7: ____ × 7 = $____ .",
-      "Answer: $____."]),
+     ["4 pens cost $5.00. Find the cost of 10 pens.",
+      "Unit rate: 5.00 ÷ 4 = $1.25 per pen.",
+      "10 × 1.25 = $12.50.   Answer: $12.50."],
+     [("L1", "Simplify the ratio 18 : 24.", "3 : 4"),
+      ("L2", "A car uses 6 L of fuel per 100 km. How much fuel is needed for 250 km?", f"6 × 2.5 = {6*2.5:.0f} L"),
+      ("L2", "Share $60 in the ratio 2 : 3.", "$24 and $36"),
+      ("L3", "A recipe for 4 servings uses 300 g of flour. How much flour is needed for 10 servings?",
+       f"300 ÷ 4 × 10 = {300//4*10} g")]),
+]
+
+WARMUP = [
+    ("Evaluate: (-7) + (+3).", f"{-7+3}"),
+    ("Write 3 × 3 × 3 as a single power, then find its value.", f"3<super>3</super> = {3**3}"),
+    ("Reduce the fraction 20/25 to lowest terms.", f"{fr(F(20,25))}"),
 ]
 
 
@@ -141,50 +120,42 @@ def build():
     d.start()
     d.learning_goal("Use integers, exponent laws, fractions, roots, percents and ratios to solve multi-step problems.")
 
-    # Warm-up (3 quick L1)
-    d.heading("Warm-up  (do these first — recall)")
-    d.body("Answer quickly to activate prior skills. Answers are on the last page.", ST_BODY, gap=8)
-    d.question(1, "Evaluate (-4) + (-9).", answer="short")
-    d.question(2, "Write 2 × 2 × 2 × 2 as a single power, then find its value.", answer="short")
-    d.question(3, "Reduce the fraction 12/18 to lowest terms.", answer="short")
+    d.heading("Warm-up  (quick recall)")
+    for i, (stem, _a) in enumerate(WARMUP, start=1):
+        d.question(i, stem, answer="work", work_pts=30)
 
-    # Worked + partial per sub-topic
-    d.heading("Worked Examples & Guided Steps")
-    d.body("For each skill: study the worked <b>Example</b> ('I do'), then complete the "
-           "<b>We do</b> steps together, filling every blank.", ST_BODY, gap=10)
-    for name, i_do, we_do in SUBTOPICS:
-        d.heading(name, color=d_med())
-        d.example_box(i_do)
-        d.body(" <br/>".join(we_do), ST_BODY, gap=14)
+    d.heading("Examples & Practice")
+    d.body("For each skill, study the worked <b>Example</b>, then solve the questions that follow. "
+           "Difficulty rises within each set (L1 → L3). Answers are on the last page.", ST_BODY, gap=10)
 
-    # Guided practice
-    d.heading("Guided Practice")
-    d.body("Show all steps. Level is shown in brackets: L1 fluency, L2 application, L3 thinking.", ST_BODY, gap=10)
-    for i, (lvl, stem, _ans) in enumerate(GUIDED, start=1):
-        tagged = f"{stem}  <font color='#2D7DD2'><b>[{lvl}]</b></font>"
-        ans_mode = "work" if lvl in ("L2", "L3") else "short"
-        wp = 70 if lvl == "L3" else (55 if lvl == "L2" else None)
-        d.question(i, tagged, answer=ans_mode, work_pts=wp)
+    n = len(WARMUP)
+    answers = []   # (num, level, ans)
+    for name, example, qs in SUBTOPICS:
+        d.heading(name, color=CM_MED_BLUE)
+        d.example_box(example)
+        for lvl, stem, ans in qs:
+            n += 1
+            tagged = f"{stem}  <font color='#2D7DD2'><b>[{lvl}]</b></font>"
+            wp = 60 if lvl == "L3" else (46 if lvl == "L2" else 34)
+            d.question(n, tagged, answer="work", work_pts=wp)
+            answers.append((n, lvl, ans))
 
-    # Answer page (separate — forced new page)
+    # Answers page
     d._new_page()
-    d.c.setFillColor(d_blue()); d.c.setFont("DejaVuSans-Bold", 16)
-    d.c.drawCentredString(306, d.y, "Guided Practice — Answers")
-    d.y -= 30
-    d.body("Warm-up: 1) -13   2) 2<super>4</super> = 16   3) 2/3", ST_BODY, gap=12)
-    for i, (lvl, stem, ans) in enumerate(GUIDED, start=1):
-        d.key_entry(i, [f"({lvl}) {ans}"])
+    d.c.setFillColor(CM_BLUE); d.c.setFont("DejaVuSans-Bold", 16)
+    d.c.drawCentredString(306, d.y, "Answers")
+    d.y -= 28
+    wu = "   ".join(f"W{i}) {a}" for i, (_s, a) in enumerate(WARMUP, start=1))
+    d.body("<b>Warm-up:</b> " + wu, ST_BODY, gap=12)
+    for num, lvl, ans in answers:
+        d.key_entry(num, [f"({lvl}) {ans}"])
 
     path = d.build()
-    return path, len(GUIDED)
-
-
-def d_blue():
-    from cm_pdf import CM_BLUE; return CM_BLUE
-def d_med():
-    from cm_pdf import CM_MED_BLUE; return CM_MED_BLUE
+    return path, len(answers)
 
 
 if __name__ == "__main__":
     p, n = build()
-    print(f"engine {__version__}  built {p}  guided={n}")
+    from collections import Counter
+    c = Counter(a[1] for st in SUBTOPICS for a in [(0, q[0]) for q in st[2]])
+    print(f"engine {__version__}  built {p}  practice_questions={n}  levels={dict(c)}")
