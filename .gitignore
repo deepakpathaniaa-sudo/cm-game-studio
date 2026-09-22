@@ -1,2 +1,5 @@
 ﻿node_modules
 .vercel
+
+output/**/__pycache__/
+*.pyc
